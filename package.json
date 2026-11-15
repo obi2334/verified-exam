@@ -1,0 +1,17 @@
+{
+  "name": "verified-exam-cross-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Capacitor app shell for the Firebase Verified Exam web application",
+  "scripts": {
+    "sync": "cap sync",
+    "android": "cap open android",
+    "ios": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2"
+  }
+}

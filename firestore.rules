@@ -1,0 +1,168 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userProfile() {
+      return get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+    }
+
+    function isActiveUser() {
+      return signedIn() && userProfile().get('active', true) == true;
+    }
+
+    function isStudent() {
+      return isActiveUser() && userProfile().role == 'student';
+    }
+
+    function isAdmin() {
+      return isActiveUser() && userProfile().role == 'admin';
+    }
+
+    function classFor(profile) {
+      return profile.get('studentClass', profile.get('teacherClass', ''));
+    }
+
+    function isClassTeacherFor(className) {
+      return isActiveUser()
+        && userProfile().role == 'class-teacher'
+        && classFor(userProfile()) == className;
+    }
+
+    function isSubjectTeacherFor(className, subjectName) {
+      return isActiveUser()
+        && userProfile().role == 'subject-teacher'
+        && userProfile().teacherClass == className
+        && userProfile().subject == subjectName;
+    }
+
+    match /profiles/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid
+        || isAdmin()
+        || (isClassTeacherFor(resource.data.studentClass)
+          && resource.data.role == 'student'
+          ));
+      allow list: if isAdmin()
+        || (isClassTeacherFor(resource.data.studentClass)
+          && resource.data.role == 'student'
+          );
+      allow create: if isAdmin()
+        || (signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.uid == uid
+          && request.resource.data.role == 'student'
+          && request.resource.data.email == request.auth.token.email);
+      allow update, delete: if isAdmin();
+    }
+
+    match /studentIds/{identifier} {
+      allow get: if signedIn()
+        && (!exists(/databases/$(database)/documents/studentIds/$(identifier))
+          || resource.data.uid == request.auth.uid
+          || isAdmin());
+      allow list: if isAdmin();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'student'
+        && getAfter(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.identifier == request.resource.data.identifier;
+      allow update, delete: if isAdmin();
+    }
+
+    match /publishedExams/{examId} {
+      allow read: if isAdmin()
+        || (isStudent()
+          && userProfile().studentClass == resource.data.assignedClass)
+        || isSubjectTeacherFor(resource.data.assignedClass, resource.data.subject);
+      allow create: if isAdmin()
+        || (isActiveUser() && userProfile().role == 'subject-teacher'
+          && userProfile().teacherClass == request.resource.data.assignedClass
+          && userProfile().subject == request.resource.data.subject
+          && request.resource.data.createdByUid == request.auth.uid
+          && request.resource.data.get('serverGraded', false) == false);
+      allow update: if isAdmin()
+        || (isActiveUser() && userProfile().role == 'subject-teacher'
+          && resource.data.get('serverGraded', false) == false
+          && request.resource.data.get('serverGraded', false) == false
+          && userProfile().teacherClass == request.resource.data.assignedClass
+          && userProfile().subject == request.resource.data.subject
+          && request.resource.data.createdByUid == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /submissions/{submissionId} {
+      allow read: if isAdmin()
+        || isClassTeacherFor(resource.data.studentClass)
+        || isSubjectTeacherFor(resource.data.studentClass, resource.data.subject);
+      allow create: if signedIn()
+        && isStudent()
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.studentClass == userProfile().studentClass
+        && request.resource.data.submissionId == submissionId
+        && exists(/databases/$(database)/documents/publishedExams/$(request.resource.data.examId))
+        && get(/databases/$(database)/documents/publishedExams/$(request.resource.data.examId)).data.assignedClass == userProfile().studentClass
+        && get(/databases/$(database)/documents/publishedExams/$(request.resource.data.examId)).data.get('serverGraded', false) == false;
+      allow update: if isAdmin()
+        || (isSubjectTeacherFor(resource.data.studentClass, resource.data.subject)
+          && request.resource.data.studentUid == resource.data.studentUid
+          && request.resource.data.studentClass == resource.data.studentClass
+          && request.resource.data.examId == resource.data.examId);
+      allow delete: if isAdmin();
+    }
+
+    match /studentAttempts/{attemptId} {
+      allow read: if isAdmin()
+        || (isStudent() && resource.data.studentUid == request.auth.uid)
+        || isClassTeacherFor(resource.data.studentClass);
+      allow create: if signedIn()
+        && request.resource.data.studentUid == request.auth.uid
+        && isStudent()
+        && request.resource.data.studentClass == userProfile().studentClass
+        && request.resource.data.submissionId == attemptId
+        && getAfter(/databases/$(database)/documents/submissions/$(attemptId)).data.studentUid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/submissions/$(attemptId)).data.examId == request.resource.data.examId
+        && get(/databases/$(database)/documents/publishedExams/$(request.resource.data.examId)).data.get('serverGraded', false) == false;
+      allow update, delete: if isAdmin();
+    }
+
+    match /studentResults/{resultId} {
+      allow read: if isAdmin()
+        || (isStudent() && resource.data.studentUid == request.auth.uid)
+        || isClassTeacherFor(resource.data.studentClass);
+      allow create, update: if isAdmin()
+        || (isClassTeacherFor(request.resource.data.studentClass)
+          && request.resource.data.submissionId == resultId
+          && request.resource.data.releasedByUid == request.auth.uid
+          && get(/databases/$(database)/documents/submissions/$(resultId)).data.studentUid == request.resource.data.studentUid
+          && get(/databases/$(database)/documents/submissions/$(resultId)).data.studentClass == request.resource.data.studentClass);
+      allow delete: if isAdmin();
+    }
+
+    match /proctorLogs/{logId} {
+      allow read: if isAdmin()
+        || isClassTeacherFor(resource.data.studentClass)
+        || isSubjectTeacherFor(resource.data.studentClass, resource.data.subject);
+      allow create: if signedIn()
+        && request.resource.data.studentUid == request.auth.uid
+        && isStudent()
+        && request.resource.data.studentClass == userProfile().studentClass;
+      allow update, delete: if isAdmin();
+    }
+
+    match /examCommands/{commandId} {
+      allow read: if isAdmin()
+        || (isStudent() && resource.data.targetUid == request.auth.uid);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /examAnswerKeys/{examId} {
+      allow read, write: if false;
+    }
+
+    match /aiExamDrafts/{draftId} {
+      allow read, write: if false;
+    }
+  }
+}

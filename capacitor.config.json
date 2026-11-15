@@ -1,0 +1,12 @@
+{
+  "appId": "com.verifiedexam.app",
+  "appName": "Verified Exam",
+  "webDir": "www",
+  "backgroundColor": "#ffffff",
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
