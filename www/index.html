@@ -1,0 +1,2700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="firebase-app-check-site-key" content="6LeCqyEuAAAAAIC19knmtBMebtqOz_vJXfnfW0wG">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="icons/app-icon.svg">
+    <link rel="apple-touch-icon" href="icons/app-icon.svg">
+    <title>Verified Exam - Secure Cloud AI Proctoring System</title>
+    <!-- Firebase SDK Compat CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <!-- html2pdf Library CDN for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeeyhMQgwz2Bsd1O9YFiO5kETlKDGVarQ",
+            authDomain: "verified-exam.firebaseapp.com",
+            projectId: "verified-exam",
+            storageBucket: "verified-exam.firebasestorage.app",
+            messagingSenderId: "1039941692612",
+            appId: "1:1039941692612:web:4853c6ccdd49b00b1e2d91",
+            measurementId: "G-7M229VB28N"
+        };
+        window.verifiedExamFirebaseConfig = firebaseConfig;
+        if (window.firebase && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    </script>
+    <style>
+        * { box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: smooth; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #ffffff; color: #111827; margin: 0; padding: 0; min-width: 320px; }
+        
+        /* Splash Screen Animation */
+        #splash-screen { position: fixed; inset: 0; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease, visibility 0.6s ease; }
+        .splash-logo { font-size: 64px; animation: bounce 1.5s infinite; }
+        .spinner { width: 44px; height: 44px; border: 4px solid #e0e7ff; border-top: 4px solid #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; margin-top: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        header { background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .logo { font-weight: 700; font-size: 18px; color: #4f46e5; display: flex; align-items: center; gap: 8px; }
+        nav { display: flex; gap: 8px; flex-wrap: wrap; }
+        nav button { background: none; border: none; padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 13px; border-radius: 8px; color: #4b5563; transition: all 0.2s; }
+        nav button:hover { background: #f3f4f6; }
+        nav button.active { background: #4f46e5; color: white; }
+        main { max-width: 980px; margin: 40px auto; padding: 0 20px; }
+        .card { background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 24px; }
+        .hidden { display: none !important; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #374151; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: #4f46e5; }
+        .btn { background: #4f46e5; color: white; border: none; padding: 12px 20px; font-weight: 600; border-radius: 8px; cursor: pointer; width: 100%; font-size: 15px; transition: background 0.2s; }
+        .btn:hover { background: #4338ca; }
+        .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .video-box { width: 180px; height: 135px; background: black; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid #d1d5db; margin: 0 auto 12px auto; }
+        video, canvas { width: 100%; height: 100%; object-fit: cover; }
+        .badge { display: inline-block; padding: 4px 10px; font-size: 12px; font-weight: 600; border-radius: 9999px; }
+        .badge-green { background: #ecfdf5; color: #047857; }
+        .badge-red { background: #fef2f2; color: #b91c1c; }
+        .badge-yellow { background: #fffbeb; color: #b45309; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f9fafb; font-weight: 600; color: #374151; }
+        .alert-banner { position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .warning-box { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
+        .warning-box h4 { margin: 0 0 4px 0; color: #9f1239; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+        .warning-box p { margin: 0; color: #881337; font-size: 12px; line-height: 1.4; }
+        .tabs-sub { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+        .tabs-sub button { background: none; border: none; font-weight: 600; font-size: 14px; cursor: pointer; color: #6b7280; padding: 6px 12px; border-radius: 6px; }
+        .tabs-sub button.active-sub { background: #e0e7ff; color: #4f46e5; }
+        .auth-link { display: inline-block; margin-top: -6px; margin-bottom: 16px; color: #4f46e5; font-size: 13px; font-weight: 600; text-decoration: none; }
+        .auth-link:hover { text-decoration: underline; }
+        .folder-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.2s; position: relative; }
+        .folder-card:hover { border-color: #4f46e5; background: #f1f5f9; }
+        button, input, select, textarea { font: inherit; }
+        button { min-height: 42px; touch-action: manipulation; }
+        button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #818cf8; outline-offset: 2px; }
+        img, video, canvas { max-width: 100%; }
+        table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        th, td { white-space: normal; }
+
+        @media (max-width: 900px) {
+            header { padding: 14px 20px; align-items: flex-start; gap: 12px; }
+            nav { justify-content: flex-end; }
+            main { margin: 26px auto; padding: 0 16px; }
+            .card { padding: 24px; }
+            #tab-subject-teacher [style*="grid-template-columns: 2fr 1fr"] { grid-template-columns: 1fr !important; }
+            #tab-admin-proctor [style*="grid-template-columns: 2fr 1fr 1fr"] { grid-template-columns: 1fr 1fr !important; }
+        }
+
+        @media (max-width: 640px) {
+            header { position: static; flex-direction: column; padding: 12px 14px; }
+            .logo { font-size: 17px; }
+            nav { width: 100%; justify-content: flex-start; gap: 5px; }
+            nav button { min-height: 44px; padding: 9px 10px; font-size: 12px; }
+            main { margin: 18px auto; padding: 0 12px; }
+            .card { padding: 18px; border-radius: 12px; margin-bottom: 16px; }
+            .tabs-sub { overflow-x: auto; flex-wrap: nowrap; gap: 5px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+            .tabs-sub button { flex: 0 0 auto; min-height: 42px; padding: 8px 10px; font-size: 13px; }
+            #tab-subject-teacher [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+            #tab-admin-proctor [style*="grid-template-columns: 2fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
+            #tab-student > div[style*="justify-content: space-between"] { align-items: flex-start !important; flex-direction: column; gap: 12px; }
+            #tab-student > div[style*="background: #f9fafb"] { align-items: flex-start !important; flex-direction: column; }
+            #exam-room > .card:first-child { position: sticky; top: 0; align-items: flex-start !important; flex-wrap: wrap; gap: 12px; padding: 14px; }
+            #exam-room > .card:first-child > div:last-child { width: 100%; justify-content: space-between; gap: 12px !important; }
+            #exam-room > .card:first-child .video-box { margin-left: auto !important; }
+            .video-box { max-width: 100%; }
+            .alert-banner { left: 12px; right: 12px; top: 12px; text-align: center; }
+            table { font-size: 12px; }
+            th, td { padding: 9px 10px; min-width: 90px; }
+        }
+
+        @media (max-width: 400px) {
+            .card { padding: 14px; }
+            nav button { flex: 1 1 auto; }
+            .video-box { width: min(180px, 100%); }
+            #exam-room > .card:first-child #timer-display { font-size: 18px !important; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animated Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-logo">🛡️</div>
+        <h1 style="font-size: 32px; font-weight: 800; color: #4f46e5; margin: 12px 0 4px 0;">Verified Exam</h1>
+        <p style="color: #6b7280; font-size: 14px; margin: 0;">Secure Cloud Assessment & AI Proctoring Platform</p>
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Top Navigation Bar -->
+    <header>
+        <div class="logo">🛡️ Verified Exam</div>
+        <nav id="top-nav">
+            <button onclick="switchTab('auth')" id="nav-auth" class="active">Login / Sign Up</button>
+            <button onclick="switchTab('student')" id="nav-student" class="hidden">Student Exam Portal</button>
+            <button onclick="switchTab('subject-teacher')" id="nav-subject-teacher" class="hidden">Subject Teacher Portal</button>
+            <button onclick="switchTab('class-teacher')" id="nav-class-teacher" class="hidden">Class Teacher Folders</button>
+            <button onclick="switchTab('admin-proctor')" id="nav-admin-proctor" class="hidden">Admin Proctor Portal</button>
+            <button onclick="switchTab('analytics')" id="nav-analytics" class="hidden">Proctor Logs</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- ================= AUTHENTICATION PORTAL ================= -->
+        <section id="tab-auth" class="card" style="max-width: 520px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <h2 style="margin: 0 0 6px 0; font-size: 26px; color: #111827;">Welcome to Verified Exam</h2>
+                <p style="color: #6b7280; font-size: 13px; margin: 0;">Secure Cloud Assessment & AI Proctoring Platform</p>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ 3-Strike Strict Proctoring Policy</h4>
+                <p>Turning your neck away from the screen will issue up to 3 warning strikes. Upon your 3rd strike, your exam will be automatically submitted, your access revoked, and you will be logged out.</p>
+            </div>
+
+            <div class="tabs-sub" id="auth-switcher">
+                <button onclick="switchAuthMode('login')" id="sub-login" class="active-sub">Sign In</button>
+                <button onclick="switchAuthMode('signup')" id="sub-signup">Register</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <div id="auth-login-container">
+                <h3 style="margin-top: 0; font-size: 18px;">Sign In to Your Account</h3>
+                <div class="form-group">
+                    <label>Register as</label>
+                    <select id="login-role" onchange="toggleLoginFields()">
+                        <option value="student">Student</option>
+                        <option value="subject-teacher">Subject Teacher</option>
+                        <option value="class-teacher">Class Teacher</option>
+                        <option value="admin">Master Admin / Proctor</option>
+                    </select>
+                </div>
+
+                <div class="form-group hidden" id="login-class-group">
+                    <label>Assigned Class (Class Teacher Login)</label>
+                    <select id="login-class">
+                        <option value="JSS 1">JSS 1</option>
+                        <option value="JSS 2">JSS 2</option>
+                        <option value="JSS 3">JSS 3</option>
+                        <option value="SS 1">SS 1</option>
+                        <option value="SS 2">SS 2</option>
+                        <option value="SS 3">SS 3</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Email address</label>
+                    <input type="email" id="login-identifier" autocomplete="username" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••">
+                </div>
+                <a class="auth-link" href="#" onclick="event.preventDefault(); switchAuthMode('forgot');">Forgot your password?</a>
+
+                <div class="form-group hidden" id="login-face-box"></div>
+
+                <button onclick="handleUserLogin()" class="btn" style="margin-top: 10px;">Authenticate & Login</button>
+            </div>
+
+            <!-- SIGN UP FORM -->
+            <div id="auth-signup-container" class="hidden">
+                <h3 style="margin-top: 0; font-size: 18px;">Create New Account</h3>
+                <div class="form-group">
+                    <label>Register As</label>
+                    <select id="signup-role" onchange="toggleSignupFields()">
+                        <option value="student">Student</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="signup-class-group">
+                    <label>Student Class</label>
+                    <select id="signup-class">
+                        <option value="JSS 1">JSS 1</option>
+                        <option value="JSS 2">JSS 2</option>
+                        <option value="JSS 3">JSS 3</option>
+                        <option value="SS 1">SS 1</option>
+                        <option value="SS 2">SS 2</option>
+                        <option value="SS 3">SS 3</option>
+                    </select>
+                </div>
+
+                <div class="form-group hidden" id="signup-class-teacher-group">
+                    <label>Assigned Class (Class Teacher)</label>
+                    <select id="signup-class-teacher-class">
+                        <option value="JSS 1">JSS 1</option>
+                        <option value="JSS 2">JSS 2</option>
+                        <option value="JSS 3">JSS 3</option>
+                        <option value="SS 1">SS 1</option>
+                        <option value="SS 2">SS 2</option>
+                        <option value="SS 3">SS 3</option>
+                    </select>
+                </div>
+
+                <div class="form-group hidden" id="signup-teacher-class-group">
+                    <label>Assigned Class (Subject Teachers Only)</label>
+                    <select id="signup-teacher-class">
+                        <option value="JSS 1">JSS 1</option>
+                        <option value="JSS 2">JSS 2</option>
+                        <option value="JSS 3">JSS 3</option>
+                        <option value="SS 1">SS 1</option>
+                        <option value="SS 2">SS 2</option>
+                        <option value="SS 3">SS 3</option>
+                    </select>
+                </div>
+                <div class="form-group hidden" id="signup-subject-group">
+                    <label>Assigned Subject (Subject Teachers Only)</label>
+                    <select id="signup-subject">
+                        <option value="English Language">English Language</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Basic Science">Basic Science</option>
+                        <option value="Basic Technology">Basic Technology</option>
+                        <option value="Social Studies">Social Studies</option>
+                        <option value="Civic Education">Civic Education</option>
+                        <option value="Computer Studies">Computer Studies</option>
+                        <option value="Agricultural Science">Agricultural Science</option>
+                        <option value="Business Studies">Business Studies</option>
+                        <option value="Home Economics">Home Economics</option>
+                        <option value="Physical & Health Education">Physical & Health Education</option>
+                        <option value="Christian Religious Studies">Christian Religious Studies</option>
+                        <option value="Islamic Religious Studies">Islamic Religious Studies</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Biology">Biology</option>
+                        <option value="Economics">Economics</option>
+                        <option value="Government">Government</option>
+                        <option value="Literature in English">Literature in English</option>
+                        <option value="Geography">Geography</option>
+                        <option value="Accounting">Accounting</option>
+                        <option value="Further Mathematics">Further Mathematics</option>
+                        <option value="Commerce">Commerce</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="signup-name" placeholder="e.g. Obi Emmanuel Ndubuisi">
+                </div>
+                <div class="form-group">
+                    <label>Email address</label>
+                    <input type="email" id="signup-email" autocomplete="email" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Student / Staff ID</label>
+                    <input type="text" id="signup-identifier" placeholder="e.g. 2025/B/CSC/0642">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signup-password" placeholder="Create a secure password">
+                </div>
+
+                <div class="form-group hidden" id="signup-face-box"></div>
+
+                <p style="font-size:12px;color:#6b7280;">Students can register here. Teacher and admin accounts must be created by the school administrator.</p>
+                <button onclick="handleUserSignup()" class="btn" style="margin-top: 10px;">Create Account</button>
+            </div>
+
+            <!-- FORGOT PASSWORD FORM -->
+            <div id="auth-forgot-container" class="hidden">
+                <h3 style="margin-top: 0; font-size: 18px;">Reset your password</h3>
+                <p style="color: #6b7280; font-size: 13px; margin-bottom: 16px;">Enter the email address linked to your account. We’ll send you a secure password reset link.</p>
+                <div class="form-group">
+                    <label for="forgot-email">Email address</label>
+                    <input type="email" id="forgot-email" autocomplete="email" placeholder="you@example.com">
+                </div>
+                <button onclick="handlePasswordReset()" class="btn" style="margin-top: 10px;">Send reset link</button>
+                <p id="password-reset-status" role="status" style="font-size: 12px; color: #6b7280; min-height: 18px;"></p>
+                <button onclick="switchAuthMode('login')" class="btn btn-secondary" style="margin-top: 8px;">← Back to sign in</button>
+            </div>
+        </section>
+
+        <!-- ================= STUDENT EXAM PORTAL ================= -->
+        <section id="tab-student" class="hidden card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h1 style="margin: 0; font-size: 24px;">Student Examination Portal</h1>
+                    <p style="color: #6b7280; font-size: 13px; margin: 4px 0 0 0;">Logged in as: <span id="student-profile-label" style="font-weight: 600; color: #4f46e5;"></span> | Class: <span id="student-class-label" style="font-weight: 600; color: #059669;"></span></p>
+                </div>
+                <button onclick="logoutUser()" class="btn btn-secondary" style="width: auto; font-size: 13px; padding: 8px 14px;">🔒 Sign Out</button>
+            </div>
+            
+            <div class="tabs-sub" style="margin-top: 18px;">
+                <button onclick="switchStudentSubTab('exams')" id="student-tab-exams" class="active-sub" role="tab" aria-selected="true">Examinations</button>
+                <button onclick="switchStudentSubTab('results')" id="student-tab-results" role="tab" aria-selected="false">My Results</button>
+            </div>
+
+            <div id="student-exams-panel">
+                <div class="form-group">
+                    <label>Select Examination</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="exam-select" style="flex: 1;"></select>
+                        <button onclick="loadExamsList()" class="btn btn-secondary" style="width: auto; font-size: 13px;">🔄 Refresh Exams</button>
+                    </div>
+                </div>
+                <button onclick="startExamSession()" class="btn">Enter Fullscreen & Begin Exam</button>
+            </div>
+
+            <section id="student-results-panel" class="hidden card" style="margin-top: 18px; padding: 22px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <div>
+                        <h2 style="margin:0;font-size:20px;">My Results</h2>
+                        <p style="margin:4px 0 0;color:#6b7280;font-size:13px;">Your submitted exam scores and grading status.</p>
+                    </div>
+                    <button onclick="refreshStudentResults()" class="btn btn-secondary" style="width:auto;font-size:13px;">Refresh results</button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table style="min-width:580px;">
+                        <thead><tr><th>Exam</th><th>Date</th><th>Score</th><th>Grade</th><th>Status</th></tr></thead>
+                        <tbody id="student-results-body"><tr><td colspan="5" style="color:#6b7280;">Your submitted results will appear here.</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+
+        <!-- ================= ACTIVE EXAM ROOM ================= -->
+        <section id="exam-room" class="hidden">
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; position: sticky; top: 80px; z-index: 40; margin-bottom: 20px;">
+                <div>
+                    <h2 id="room-exam-title" style="margin: 0 0 4px 0; font-size: 18px;">Exam Title</h2>
+                    <p style="margin: 0; font-size: 13px; color: #6b7280;">Candidate: <span id="room-student-name" style="font-weight: 600; color: #111827;"></span> | <span id="strike-counter-label" style="font-weight: bold; color: #dc2626;">Strikes: 0 / 3</span></p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 24px;">
+                    <div style="text-align: right;">
+                        <span style="font-size: 12px; color: #6b7280; display: block;">Time Remaining</span>
+                        <span id="timer-display" style="font-size: 20px; font-weight: bold; color: #dc2626;">30:00</span>
+                    </div>
+                    <div class="video-box" style="width: 90px; height: 65px; margin: 0;">
+                        <video id="live-proctor-video" autoplay playsinline muted></video>
+                        <canvas id="motion-canvas" class="hidden"></canvas>
+                        <span style="position: absolute; top: 4px; left: 4px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="exam-questions-container" style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 24px;"></div>
+
+            <button onclick="submitExam()" class="btn" style="background: #059669;">Submit Examination</button>
+        </section>
+
+        <!-- ================= SCORE BREAKDOWN SCREEN ================= -->
+        <section id="score-screen" class="hidden card" style="text-align: center; max-width: 600px; margin: 0 auto;">
+            <div style="font-size: 48px; margin-bottom: 12px;">🏆</div>
+            <h2 style="margin: 0 0 8px 0;">Exam Submitted & Recorded!</h2>
+                <p style="color: #6b7280; font-size: 14px; margin-bottom: 24px;">Your attempt has been submitted. Your class teacher will release your result when it is ready.</p>
+            
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                <div id="final-score-val" style="font-size: 24px; font-weight: 800; color: #4f46e5; margin-bottom: 4px;">Result pending</div>
+                <p id="final-percentage" style="margin: 0; font-size: 14px; font-weight: 600; color: #374151;">Check the My Results tab after your teacher publishes it.</p>
+            </div>
+
+            <button onclick="location.reload()" class="btn">Return to Home</button>
+        </section>
+
+        <!-- ================= SUBJECT TEACHER PORTAL ================= -->
+        <section id="tab-subject-teacher" class="hidden card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h1 style="margin: 0; font-size: 24px;">Subject Teacher Portal</h1>
+                    <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">Teacher: <span id="subject-teacher-label" style="font-weight: 600; color: #4f46e5;"></span> | Class: <span id="subject-teacher-class" style="font-weight: 600; color: #0284c7;"></span> | Subject: <span id="subject-teacher-subject" style="font-weight: 600; color: #059669;"></span></p>
+                </div>
+                <button onclick="logoutUser()" class="btn btn-secondary" style="width: auto; font-size: 13px; padding: 8px 14px;">🔒 Sign Out</button>
+            </div>
+            
+            <div class="tabs-sub">
+                <button onclick="switchSubjectSubTab('builder')" id="sub-builder" class="active-sub">Publish Subject Exam</button>
+                <button onclick="switchSubjectSubTab('grading')" id="sub-grading">Review & Grade Theory & Student Answers</button>
+            </div>
+
+            <!-- Builder View -->
+            <div id="subject-builder-view">
+                <section class="card" style="margin-bottom:20px;border:1px solid #c7d2fe;background:#f8faff;">
+                    <h3 style="margin:0 0 8px;font-size:18px;">AI Mock Exam Generator</h3>
+                    <p style="margin:0 0 14px;color:#4b5563;font-size:13px;">Generate ten original, curriculum-level mock-exam questions for your assigned class and subject. Review each question and its answer key before publishing. These are AI-created exam-style questions, not verified official past-paper questions.</p>
+                    <button type="button" onclick="generateAIMockExam()" class="btn" style="max-width:320px;background:#4f46e5;">✨ Generate 10 mock-exam questions</button>
+                    <p id="ai-exam-status" role="status" style="margin:10px 0 0;color:#4b5563;font-size:13px;"></p>
+                    <div id="ai-exam-review" class="hidden" style="margin-top:14px;"></div>
+                </section>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label>Exam Batch</label>
+                        <select id="builder-exam-batch">
+                            <option value="Midterm">3rd Term Continuous Assessment (Midterm - 30 Marks)</option>
+                            <option value="Final">Final Exam (70 Marks)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration (Minutes)</label>
+                        <input type="number" id="builder-exam-duration" value="30">
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+
+                <h3 style="margin-top: 0; font-size: 18px;">Add Question for Your Assigned Class & Subject</h3>
+                <div class="form-group">
+                    <label>Question Type</label>
+                    <select id="q-type" onchange="toggleQuestionTypeFields()">
+                        <option value="objective">Objective (Multiple Choice)</option>
+                        <option value="theory">Theory / Essay</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Question Text / Prompt</label>
+                    <textarea id="q-text" rows="3" placeholder="Enter question prompt..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Attach Image from Computer (Optional)</label>
+                    <input type="file" id="q-image-file" accept="image/*" onchange="handleImageFileSelect(event)" style="padding: 8px; background: #f9fafb;">
+                    <p id="image-upload-status" style="font-size: 11px; color: #059669; margin-top: 4px;"></p>
+                </div>
+
+                <div id="objective-options-box">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="form-group" style="margin:0;"><label>Option A</label><input type="text" id="q-opt0"></div>
+                        <div class="form-group" style="margin:0;"><label>Option B</label><input type="text" id="q-opt1"></div>
+                        <div class="form-group" style="margin:0;"><label>Option C</label><input type="text" id="q-opt2"></div>
+                        <div class="form-group" style="margin:0;"><label>Option D</label><input type="text" id="q-opt3"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Correct Answer Key</label>
+                        <select id="q-correct">
+                            <option value="0">Option A</option>
+                            <option value="1">Option B</option>
+                            <option value="2">Option C</option>
+                            <option value="3">Option D</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 24px;">
+                    <button onclick="aiFixQuestionErrors()" class="btn btn-secondary" style="background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; flex: 1;">✨ Quick Question Text Cleanup</button>
+                    <button onclick="addQuestionToBuilder()" class="btn btn-secondary" style="flex: 2;">+ Add Question to Queue</button>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <h4 style="font-size: 14px; color: #374151; margin-bottom: 8px;">Questions Queued (<span id="builder-q-count">0</span>)</h4>
+                    <div id="builder-questions-preview" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; font-size: 13px; color: #6b7280;">No questions added yet.</div>
+                </div>
+
+                <button onclick="pushExamToCloud()" class="btn" style="background: #4f46e5;">☁️ Publish Exam for My Class & Subject</button>
+            </div>
+
+            <!-- Grading / Correction View -->
+            <div id="subject-grading-view" class="hidden">
+                <h3 style="margin-top: 0; font-size: 18px;">Grade Theory Answers, Review Student Submissions & Update Scores</h3>
+                <p style="color: #6b7280; font-size: 13px; margin-bottom: 20px;">Review student objective performance and grade written theory/essay responses manually.</p>
+                <div id="subject-grading-list" style="display: flex; flex-direction: column; gap: 16px;"></div>
+            </div>
+        </section>
+
+        <!-- ================= CLASS TEACHER FOLDERS PORTAL ================= -->
+        <section id="tab-class-teacher" class="hidden card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h1 style="margin: 0; font-size: 24px;">Class Teacher Folders Portal</h1>
+                    <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">Class Teacher: <span id="class-teacher-label" style="font-weight: 600; color: #4f46e5;"></span> | Managed Class: <span id="class-teacher-class-label" style="font-weight: 600; color: #059669;"></span></p>
+                </div>
+                <button onclick="logoutUser()" class="btn btn-secondary" style="width: auto; font-size: 13px; padding: 8px 14px;">🔒 Sign Out</button>
+            </div>
+
+            <div id="class-folders-main">
+                <section class="card" style="margin-bottom:24px;">
+                    <h2 style="margin-top:0;font-size:20px;">Release Student Results</h2>
+                    <p style="color:#6b7280;font-size:13px;">Review submitted scores for your assigned class and release them to each student’s My Results tab.</p>
+                    <div style="overflow-x:auto;">
+                        <table style="min-width:680px;">
+                            <thead><tr><th>Student</th><th>Exam</th><th>Score</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody id="class-result-release-body"><tr><td colspan="5" style="color:#6b7280;">Loading class submissions…</td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+                <h3 style="margin-top: 0; font-size: 18px;" id="class-folder-title">Student Folder Directory</h3>
+                <p style="color: #6b7280; font-size: 13px; margin-bottom: 20px;">Click on any student folder to open their comprehensive report cards (Midterm 30% + Final Exam 70% weighted cumulative scores with auto-ranking).</p>
+                <div id="student-folders-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;"></div>
+            </div>
+
+            <div id="student-folder-detail" class="hidden">
+                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                    <button onclick="closeStudentFolder()" class="btn btn-secondary" style="width: auto; font-size: 13px;">← Back to Class Folders</button>
+                    <button onclick="exportStudentFolderToPDF()" class="btn" style="width: auto; font-size: 13px; background: #059669;">📥 Export Report Card to PDF</button>
+                </div>
+                <div id="student-folder-content" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px;"></div>
+            </div>
+        </section>
+
+        <!-- ================= MASTER ADMIN PROCTOR CONTROL PORTAL (RBAC PROTECTED) ================= -->
+        <section id="tab-admin-proctor" class="hidden card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h1 style="margin: 0; font-size: 24px;">Master Admin & Proctor Control Center</h1>
+                    <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">Master Administrator: <span id="admin-profile-label" style="font-weight: 600; color: #4f46e5;"></span> | <span class="badge badge-green" style="font-size: 11px;">RBAC Verified Clearance</span></p>
+                </div>
+                <button onclick="logoutUser()" class="btn btn-secondary" style="width: auto; font-size: 13px; padding: 8px 14px;">🔒 Sign Out</button>
+            </div>
+
+            <!-- Completely separated sub-tabs -->
+            <div class="tabs-sub">
+                <button onclick="switchAdminSubTab('unlock')" id="sub-admin-unlock" class="active-sub">📁 Unlock Student Accounts</button>
+                <button onclick="switchAdminSubTab('teachers')" id="sub-admin-teachers">Create Teacher Accounts</button>
+                <button onclick="switchAdminSubTab('ai-exams')" id="sub-admin-ai-exams">✨ AI Mock Exams</button>
+                <button onclick="switchAdminSubTab('resets')" id="sub-admin-resets">🔓 Reset Exam Submissions</button>
+                <button onclick="switchAdminSubTab('time')" id="sub-admin-time">⏱️ Exam Time Control</button>
+            </div>
+
+            <!-- SEPARATE SECTION 1: Unlock Student Accounts -->
+            <div id="admin-teachers-view" class="hidden">
+                <h3 style="margin-top: 0; font-size: 18px;">Create a Teacher Account</h3>
+                <p style="color:#6b7280;font-size:13px;">Create a sign-in for a teacher and assign their class or subject. Give the temporary password to the teacher privately.</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+                    <div class="form-group"><label>Teacher role</label><select id="admin-teacher-role" onchange="toggleTeacherProvisioningFields()"><option value="class-teacher">Class Teacher</option><option value="subject-teacher">Subject Teacher</option></select></div>
+                    <div class="form-group"><label>Full name</label><input id="admin-teacher-name" type="text" autocomplete="name" placeholder="Teacher name"></div>
+                    <div class="form-group"><label>Email address</label><input id="admin-teacher-email" type="email" autocomplete="email" placeholder="teacher@school.com"></div>
+                    <div class="form-group"><label>Staff ID / username</label><input id="admin-teacher-identifier" type="text" placeholder="e.g. TCH-001"></div>
+                    <div class="form-group"><label>Temporary password</label><input id="admin-teacher-password" type="password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters"></div>
+                    <div class="form-group"><label>Assigned class</label><select id="admin-teacher-class"><option>JSS 1</option><option>JSS 2</option><option>JSS 3</option><option>SS 1</option><option>SS 2</option><option>SS 3</option></select></div>
+                    <div class="form-group hidden" id="admin-teacher-subject-group"><label>Subject</label><select id="admin-teacher-subject">
+                        <option>English Language</option><option>Mathematics</option><option>Basic Science</option><option>Basic Technology</option><option>Social Studies</option><option>Civic Education</option><option>Computer Studies</option><option>Agricultural Science</option><option>Business Studies</option><option>Home Economics</option><option>Physical & Health Education</option><option>Christian Religious Studies</option><option>Islamic Religious Studies</option><option>Physics</option><option>Chemistry</option><option>Biology</option><option>Economics</option><option>Government</option><option>Literature in English</option><option>Geography</option><option>Accounting</option><option>Further Mathematics</option><option>Commerce</option>
+                    </select></div>
+                </div>
+                <button onclick="createTeacherAccount()" class="btn" style="max-width:320px;">Create Teacher Account</button>
+                <p id="admin-teacher-status" role="status" style="min-height:20px;color:#475569;font-size:13px;"></p>
+                <h3 style="font-size:16px;margin-top:24px;">Existing Teacher Accounts</h3>
+                <div style="overflow-x:auto;"><table><thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Class</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead><tbody id="admin-teachers-tbody"><tr><td colspan="7" style="color:#6b7280;">Loading teacher accounts…</td></tr></tbody></table></div>
+            </div>
+
+            <div id="admin-unlock-view">
+                <h3 style="margin-top: 0; font-size: 18px;">Unlock Student Credentials & Account Management</h3>
+                <p style="color: #6b7280; font-size: 13px; margin-bottom: 16px;">Review student account IDs and biometric registration status. Passwords are never displayed.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Student ID / Email</th>
+                            <th>Class</th>
+                            <th>Credential</th>
+                            <th>Biometric Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-unlock-tbody">
+                        <tr><td colspan="5" style="text-align: center; color: #9ca3af; padding: 24px;">No student accounts found.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="admin-ai-exams-view" class="hidden">
+                <h3 style="margin-top:0;font-size:18px;">Create AI Mock Exams for Any Class and Subject</h3>
+                <p style="color:#6b7280;font-size:13px;">Generate one reviewed 10-question exam at a time. AI-created questions are original exam-style drafts and should be checked for syllabus accuracy before release.</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+                    <div class="form-group"><label>Class</label><select id="admin-ai-exam-class"><option>JSS 1</option><option>JSS 2</option><option>JSS 3</option><option>SS 1</option><option>SS 2</option><option>SS 3</option></select></div>
+                    <div class="form-group"><label>Subject</label><select id="admin-ai-exam-subject"></select></div>
+                    <div class="form-group"><label>Exam type</label><select id="admin-ai-exam-batch"><option value="Midterm">Midterm (30 marks)</option><option value="Final">Final exam (70 marks)</option></select></div>
+                    <div class="form-group"><label>Duration (minutes)</label><input id="admin-ai-exam-duration" type="number" min="10" max="180" value="30"></div>
+                </div>
+                <button type="button" onclick="generateAIMockExam()" class="btn" style="max-width:320px;background:#4f46e5;">✨ Generate 10 mock-exam questions</button>
+                <p id="admin-ai-exam-status" role="status" style="margin:10px 0;color:#4b5563;font-size:13px;"></p>
+                <div id="admin-ai-exam-review" class="hidden" style="margin-top:14px;"></div>
+            </div>
+
+            <!-- SEPARATE SECTION 2: Reset Exam Submissions -->
+            <div id="admin-resets-view" class="hidden">
+                <h3 style="margin-top: 0; font-size: 18px;">Exam Submission Resets & Retake Authorization</h3>
+                <p style="color: #6b7280; font-size: 13px; margin-bottom: 16px;">Manage completed examination records separately. Use this exclusively to clear accidental submissions and unlock retakes.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Candidate Name</th>
+                            <th>ID</th>
+                            <th>Class</th>
+                            <th>Exam & Batch</th>
+                            <th>Recorded Score</th>
+                            <th>Reset Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-resets-tbody">
+                        <tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 24px;">No exam submissions recorded yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- SEPARATE SECTION 3: Exam Time Control -->
+            <div id="admin-time-view" class="hidden">
+                <h3 style="margin-top: 0; font-size: 18px;">Live Candidate Exam Time Control</h3>
+                <p style="color: #6b7280; font-size: 13px; margin-bottom: 16px;">Pause, resume, or add extra time for candidates currently taking exams in case of emergencies.</p>
+                
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 15px; color: #334151;">Global Session Timer Override</h4>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; align-items: flex-end;">
+                        <div class="form-group" style="margin:0;">
+                            <label>Target Candidate ID or Name</label>
+                            <input type="text" id="target-student-id" placeholder="e.g. 2025/B/CSC/0642">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>Add Time (Minutes)</label>
+                            <input type="number" id="extra-time-mins" value="5" min="1" max="60">
+                        </div>
+                        <button onclick="adminAddExtraTime()" class="btn" style="background: #059669; padding: 12px;">+ Add Extra Time</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="adminToggleGlobalPause()" id="global-pause-btn" class="btn" style="background: #d97706; flex: 1;">⏸️ Pause Exam Timer for All Active Students</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PROCTOR LOGS PORTAL ================= -->
+        <section id="tab-analytics" class="hidden card">
+            <h1 style="margin-top: 0; font-size: 24px;">Proctor Telemetry & Cheating Logs</h1>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 24px;">Review candidate violation flags during live exams.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Candidate Name</th>
+                        <th>Class</th>
+                        <th>ID</th>
+                        <th>Subject & Batch</th>
+                        <th>Score</th>
+                        <th>Cheating Flags</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-table-body">
+                    <tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 24px;">No telemetry logs recorded yet.</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js';
+        import { getAI, getGenerativeModel, GoogleAIBackend, Schema } from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-ai.js';
+        import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'https://www.gstatic.com/firebasejs/12.12.1/firebase-app-check.js';
+
+        let mockExamModel;
+        try {
+            const appCheckSiteKey = document.querySelector('meta[name="firebase-app-check-site-key"]')?.content;
+            if (!appCheckSiteKey || appCheckSiteKey.startsWith('PASTE_')) throw new Error('Add the web App Check reCAPTCHA Enterprise site key in the app settings before using AI.');
+            const aiApp = initializeApp(window.verifiedExamFirebaseConfig, 'verified-exam-ai');
+            initializeAppCheck(aiApp, { provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey), isTokenAutoRefreshEnabled: true });
+            const ai = getAI(aiApp, { backend: new GoogleAIBackend() });
+            const questionSchema = Schema.object({
+                properties: {
+                    questions: Schema.array({
+                        items: Schema.object({
+                            properties: {
+                                text: Schema.string(),
+                                options: Schema.array({ items: Schema.string() }),
+                                correct: Schema.number(),
+                                explanation: Schema.string()
+                            }
+                        })
+                    })
+                }
+            });
+            mockExamModel = getGenerativeModel(ai, {
+                model: 'gemini-3.8-flash',
+                generationConfig: { responseMimeType: 'application/json', responseSchema: questionSchema, temperature: 0.4, maxOutputTokens: 6000 }
+            });
+        } catch(error) {
+            window.firebaseAILogicSetupError = error;
+        }
+
+        window.generateMockExamWithAI = async ({ assignedClass, subject }) => {
+            if (!mockExamModel) throw window.firebaseAILogicSetupError || new Error('Firebase AI Logic is not configured yet.');
+            const prompt = `Create exactly 10 original multiple-choice mock-exam questions for ${assignedClass} students in Nigeria studying ${subject}. This is a formal timed assessment, not a practice quiz. Use age-appropriate terminology and curriculum-level content; cover a balanced range of core topics, avoid ambiguous or trick questions, and make each item independently answerable. These must be original exam-style items, not claimed to be official past-paper questions. Each question needs a clear text, exactly four plausible options, a zero-based correct option index, and a concise explanation for the teacher.`;
+            const result = await mockExamModel.generateContent(prompt);
+            const output = JSON.parse(result.response.text());
+            const questions = output.questions;
+            if (!Array.isArray(questions) || questions.length !== 10 || questions.some(question =>
+                typeof question.text !== 'string' || !question.text.trim() || !Array.isArray(question.options) ||
+                question.options.length !== 4 || question.options.some(option => typeof option !== 'string' || !option.trim()) ||
+                !Number.isInteger(question.correct) || question.correct < 0 || question.correct > 3
+            )) throw new Error('The AI returned an incomplete question set. Please generate it again.');
+            return questions;
+        };
+    </script>
+
+    <!-- Application Script -->
+    <script>
+        let db = window.firebase?.apps?.length ? firebase.firestore() : null;
+        let currentUser = null;
+        let cloudListeners = [];
+        let capturedFaceDataUrl = null;
+        let tempQuestionImageBase64 = "";
+        let loginMediaStream = null;
+        let examMediaStream = null;
+        let activeExamData = null;
+        let currentExamQuestions = [];
+        let tempBuilderQuestions = [];
+        let cheatingViolations = 0;
+        let neckTurnStrikes = 0;
+        let timerInterval = null;
+        let neckTurnSensorInterval = null;
+        let activeExportStudentName = "Student";
+        let examTotalSecondsRemaining = 1800;
+        let isExamTimerPaused = false;
+        let examSessionStartedAt = 0;
+        let processedAdminCommandIds = new Set();
+        let teacherProvisioningApp = null;
+        let aiMockDraft = null;
+
+        setTimeout(() => {
+            const splash = document.getElementById('splash-screen');
+            if(splash) {
+                splash.style.opacity = '0';
+                splash.style.visibility = 'hidden';
+            }
+        }, 1500);
+
+        // --- Bulletproof Security: Tab Switching & Blur Protection ---
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && currentUser && currentUser.role === 'student' && !document.getElementById('exam-room').classList.contains('hidden')) {
+                triggerSecurityViolationLogout("Tab switching or background navigation detected!");
+            }
+        });
+
+        window.addEventListener("blur", () => {
+            if (currentUser && currentUser.role === 'student' && !document.getElementById('exam-room').classList.contains('hidden')) {
+                triggerSecurityViolationLogout("Window focus lost or switching to another app detected!");
+            }
+        });
+
+        function triggerSecurityViolationLogout(reason) {
+            stopAllCameraStreams();
+            if(timerInterval) clearInterval(timerInterval);
+            if(neckTurnSensorInterval) clearInterval(neckTurnSensorInterval);
+            if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+
+            alert(`🚨 STRICT SECURITY VIOLATION: ${reason} You have been automatically logged out and your exam attempt is voided.`);
+            currentUser = null;
+            location.reload();
+        }
+
+        function stopAllCameraStreams() {
+            if(loginMediaStream) {
+                loginMediaStream.getTracks().forEach(track => track.stop());
+                loginMediaStream = null;
+            }
+            if(examMediaStream) {
+                examMediaStream.getTracks().forEach(track => track.stop());
+                examMediaStream = null;
+            }
+            const loginVideo = document.getElementById('login-video');
+            if(loginVideo) loginVideo.srcObject = null;
+            const previewVideo = document.getElementById('preview-video');
+            if(previewVideo) previewVideo.srcObject = null;
+            const liveProctorVideo = document.getElementById('live-proctor-video');
+            if(liveProctorVideo) liveProctorVideo.srcObject = null;
+        }
+
+        function stopCloudListeners() {
+            cloudListeners.forEach(unsubscribe => unsubscribe());
+            cloudListeners = [];
+        }
+
+        function cacheCloudCollection(cacheKey, snapshot, keyed = false) {
+            const records = snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.data().uid || doc.id }));
+            const value = keyed
+                ? Object.fromEntries(records.filter(record => record.identifier).map(record => [record.identifier, record]))
+                : records;
+            localStorage.setItem(cacheKey, JSON.stringify(value));
+            if(cacheKey === 'secure_app_users' && currentUser?.identifier) {
+                const profiles = value;
+                if(keyed && profiles[currentUser.identifier]) currentUser = { ...currentUser, ...profiles[currentUser.identifier] };
+            }
+            if(currentUser?.role === 'student' && !document.getElementById('tab-student').classList.contains('hidden') && (cacheKey === 'secure_published_exams' || cacheKey === 'secure_student_attempts')) loadExamsList();
+            if(currentUser?.role === 'student' && cacheKey === 'secure_student_results') renderStudentResults();
+            if(currentUser?.role === 'class-teacher' && cacheKey === 'secure_app_users') renderClassTeacherFolders();
+            if(currentUser?.role === 'subject-teacher' && cacheKey === 'secure_proctor_logs') loadSubjectGradingList();
+            if(currentUser?.role === 'class-teacher' && cacheKey === 'secure_proctor_logs') {
+                renderClassTeacherFolders();
+                renderClassResultReleaseList();
+            }
+            if(currentUser?.role === 'class-teacher' && cacheKey === 'secure_student_results') renderClassResultReleaseList();
+            if(currentUser?.role === 'admin' && cacheKey === 'secure_app_users') {
+                loadAdminUnlockList();
+                renderAdminTeacherList();
+            }
+            if(currentUser?.role === 'admin' && cacheKey === 'secure_proctor_logs') loadAdminResetsList();
+            if(currentUser?.role === 'admin' && cacheKey === 'secure_admin_proctor_logs') renderLogsTable();
+        }
+
+        function listenCloudCollection(collectionName, cacheKey, queryBuilder, keyed = false) {
+            let query = db.collection(collectionName);
+            if(queryBuilder) query = queryBuilder(query);
+            cloudListeners.push(query.onSnapshot(snapshot => cacheCloudCollection(cacheKey, snapshot, keyed), error => {
+                console.error(`Could not sync ${collectionName}.`, error);
+            }));
+        }
+
+        function startCloudDataSync(profile) {
+            if(!db || !profile?.uid) return;
+            stopCloudListeners();
+            ['secure_app_users', 'secure_published_exams', 'secure_proctor_logs', 'secure_admin_proctor_logs', 'secure_exam_admin_commands', 'secure_student_results', 'secure_student_attempts'].forEach(key => localStorage.removeItem(key));
+            localStorage.setItem('secure_app_users', JSON.stringify({ [profile.identifier]: profile }));
+
+            if(profile.role === 'admin') {
+                listenCloudCollection('profiles', 'secure_app_users', null, true);
+                listenCloudCollection('submissions', 'secure_proctor_logs');
+                listenCloudCollection('proctorLogs', 'secure_admin_proctor_logs');
+                listenCloudCollection('publishedExams', 'secure_published_exams');
+                listenCloudCollection('examCommands', 'secure_exam_admin_commands');
+                return;
+            }
+
+            if(profile.role === 'class-teacher') {
+                listenCloudCollection('profiles', 'secure_app_users', query => query.where('role', '==', 'student').where('studentClass', '==', profile.studentClass || profile.teacherClass));
+                listenCloudCollection('submissions', 'secure_proctor_logs', query => query.where('studentClass', '==', profile.studentClass || profile.teacherClass));
+                listenCloudCollection('studentResults', 'secure_student_results', query => query.where('studentClass', '==', profile.studentClass || profile.teacherClass));
+                return;
+            }
+
+            if(profile.role === 'subject-teacher') {
+                listenCloudCollection('submissions', 'secure_proctor_logs', query => query.where('studentClass', '==', profile.teacherClass).where('subject', '==', profile.subject));
+                listenCloudCollection('publishedExams', 'secure_published_exams', query => query.where('assignedClass', '==', profile.teacherClass).where('subject', '==', profile.subject));
+                return;
+            }
+
+            listenCloudCollection('publishedExams', 'secure_published_exams', query => query.where('assignedClass', '==', profile.studentClass || 'JSS 1'));
+            listenCloudCollection('studentAttempts', 'secure_student_attempts', query => query.where('studentUid', '==', profile.uid));
+            listenCloudCollection('studentResults', 'secure_student_results', query => query.where('studentUid', '==', profile.uid));
+            listenCloudCollection('examCommands', 'secure_exam_admin_commands', query => query.where('targetUid', '==', profile.uid));
+        }
+
+        function requireCloudDatabase() {
+            if(!window.firebase?.apps?.length || !db) {
+                alert('Firebase is not connected. Check your internet connection and Firebase configuration.');
+                return false;
+            }
+            return true;
+        }
+
+        function firestoreSafeId(value) {
+            return encodeURIComponent(String(value)).replace(/\./g, '%2E');
+        }
+
+        async function savePublishedExam(exam) {
+            if(!db || !currentUser?.uid) throw new Error('A signed-in Firebase account is required.');
+            await db.collection('publishedExams').doc(exam.id).set({ ...exam, createdByUid: currentUser.uid });
+        }
+
+        async function saveSubmissionRecord(logData) {
+            if(!db || !currentUser?.uid) throw new Error('A signed-in Firebase account is required.');
+            const submissionId = `${currentUser.uid}_${logData.examId}`;
+            const submission = { ...logData, studentUid: currentUser.uid, submissionId };
+            delete submission.violations;
+            const submissionRef = db.collection('submissions').doc(submissionId);
+            const attemptRef = db.collection('studentAttempts').doc(submissionId);
+            await db.runTransaction(async transaction => {
+                const existing = await transaction.get(attemptRef);
+                if(existing.exists) throw new Error('This exam has already been submitted.');
+                transaction.set(submissionRef, submission);
+                transaction.set(attemptRef, {
+                    studentUid: currentUser.uid,
+                    studentClass: logData.studentClass,
+                    examId: logData.examId,
+                    submissionId,
+                    completedAt: logData.timestamp
+                });
+            });
+            await db.collection('proctorLogs').doc(submissionId).set({
+                submissionId,
+                studentUid: currentUser.uid,
+                name: logData.name,
+                studentClass: logData.studentClass,
+                id: logData.id,
+                subject: logData.subject,
+                batch: logData.batch,
+                exam: logData.exam,
+                examId: logData.examId,
+                rawScore: logData.rawScore,
+                maxScore: logData.maxScore,
+                violations: Number(logData.violations) || 0,
+                timestamp: logData.timestamp
+            });
+        }
+
+        function switchTab(tabID) {
+            if(tabID === 'admin-proctor' || tabID === 'analytics') {
+                if(!currentUser || currentUser.role !== 'admin') {
+                    alert("🚫 ACCESS DENIED: Master Admin clearance is required to view the Proctor Control Center and logs.");
+                    return;
+                }
+            }
+
+            if(tabID !== 'student') {
+                stopAllCameraStreams();
+            }
+
+            ['auth', 'student', 'subject-teacher', 'class-teacher', 'admin-proctor', 'analytics'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if(el) el.classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${t}`);
+                if(navBtn) navBtn.classList.remove('active');
+            });
+            document.getElementById(`tab-${tabID}`).classList.remove('hidden');
+            const targetNav = document.getElementById(`nav-${tabID}`);
+            if(targetNav) targetNav.classList.add('active');
+
+            if(tabID === 'student') {
+                loadExamsList();
+                renderStudentResults();
+            }
+            if(tabID === 'subject-teacher') loadSubjectGradingList();
+            if(tabID === 'class-teacher') {
+                renderClassTeacherFolders();
+                renderClassResultReleaseList();
+            }
+            if(tabID === 'admin-proctor') loadAdminProctorPortal();
+            if(tabID === 'analytics') renderLogsTable();
+        }
+
+        function switchSubjectSubTab(sub) {
+            if(sub === 'builder') {
+                document.getElementById('sub-builder').className = 'active-sub';
+                document.getElementById('sub-grading').className = '';
+                document.getElementById('subject-builder-view').classList.remove('hidden');
+                document.getElementById('subject-grading-view').classList.add('hidden');
+            } else {
+                document.getElementById('sub-grading').className = 'active-sub';
+                document.getElementById('sub-builder').className = '';
+                document.getElementById('subject-grading-view').classList.remove('hidden');
+                document.getElementById('subject-builder-view').classList.add('hidden');
+                loadSubjectGradingList();
+            }
+        }
+
+        function switchAdminSubTab(sub) {
+            if(!currentUser || currentUser.role !== 'admin') {
+                alert("🚫 Unauthorized action.");
+                return;
+            }
+
+            ['unlock', 'teachers', 'ai-exams', 'resets', 'time'].forEach(s => {
+                document.getElementById(`sub-admin-${s}`).className = '';
+                document.getElementById(`admin-${s}-view`).classList.add('hidden');
+            });
+
+            document.getElementById(`sub-admin-${sub}`).className = 'active-sub';
+            document.getElementById(`admin-${sub}-view`).classList.remove('hidden');
+
+            if(sub === 'unlock') loadAdminUnlockList();
+            else if(sub === 'teachers') renderAdminTeacherList();
+            else if(sub === 'ai-exams') document.getElementById('admin-ai-exam-subject').innerHTML = document.getElementById('signup-subject').innerHTML;
+            else if(sub === 'resets') loadAdminResetsList();
+        }
+
+        function toggleTeacherProvisioningFields() {
+            const subjectRole = document.getElementById('admin-teacher-role').value === 'subject-teacher';
+            document.getElementById('admin-teacher-subject-group').classList.toggle('hidden', !subjectRole);
+        }
+
+        function renderAdminTeacherList() {
+            const tbody = document.getElementById('admin-teachers-tbody');
+            if(!tbody || currentUser?.role !== 'admin') return;
+            const profiles = JSON.parse(localStorage.getItem('secure_app_users') || '{}');
+            const teachers = Object.values(profiles).filter(profile => profile.role === 'class-teacher' || profile.role === 'subject-teacher');
+            if(!teachers.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color:#6b7280;">No teacher accounts have been created yet.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = teachers.map(profile => {
+                const active = profile.active !== false;
+                const actionLabel = active ? 'Deactivate' : 'Reactivate';
+                return `<tr><td>${escapeHTML(profile.name || 'Teacher')}</td><td>${profile.role === 'class-teacher' ? 'Class Teacher' : 'Subject Teacher'}</td><td>${escapeHTML(profile.email || '')}</td><td>${escapeHTML(profile.teacherClass || profile.studentClass || '—')}</td><td>${escapeHTML(profile.subject || '—')}</td><td>${active ? 'Active' : 'Inactive'}</td><td><button type="button" class="btn btn-secondary" style="width:auto;padding:6px 10px;margin:2px;" data-teacher-action="assignment" data-teacher-uid="${escapeHTML(profile.uid)}">Change assignment</button><button type="button" class="btn btn-secondary" style="width:auto;padding:6px 10px;margin:2px;" data-teacher-action="toggle" data-teacher-uid="${escapeHTML(profile.uid)}">${actionLabel}</button></td></tr>`;
+            }).join('');
+            tbody.querySelectorAll('[data-teacher-action]').forEach(button => {
+                button.addEventListener('click', () => manageTeacherAccount(button.dataset.teacherUid, button.dataset.teacherAction));
+            });
+        }
+
+        async function manageTeacherAccount(uid, action) {
+            if(!currentUser || currentUser.role !== 'admin' || !db) return;
+            const cachedProfiles = JSON.parse(localStorage.getItem('secure_app_users') || '{}');
+            const entry = Object.entries(cachedProfiles).find(([, profile]) => profile.uid === uid);
+            if(!entry) return;
+            const [profileKey, profile] = entry;
+            try {
+                if(action === 'assignment') {
+                    const assignedClass = prompt('Enter the teacher’s new assigned class:', profile.teacherClass || profile.studentClass || '');
+                    if(assignedClass === null || !assignedClass.trim()) return;
+                    const updates = { teacherClass: assignedClass.trim() };
+                    if(profile.role === 'class-teacher') updates.studentClass = assignedClass.trim();
+                    if(profile.role === 'subject-teacher') {
+                        const subject = prompt('Enter the teacher’s assigned subject:', profile.subject || '');
+                        if(subject === null || !subject.trim()) return;
+                        updates.subject = subject.trim();
+                    }
+                    await db.collection('profiles').doc(uid).update(updates);
+                    cachedProfiles[profileKey] = { ...profile, ...updates };
+                    localStorage.setItem('secure_app_users', JSON.stringify(cachedProfiles));
+                    renderAdminTeacherList();
+                    return;
+                }
+                const makeActive = profile.active === false;
+                const actionText = makeActive ? 'reactivate' : 'deactivate';
+                if(!confirm(`Are you sure you want to ${actionText} ${profile.name || 'this teacher'}? ${makeActive ? '' : 'They will no longer be able to access the app.'}`)) return;
+                await db.collection('profiles').doc(uid).update({ active: makeActive });
+                cachedProfiles[profileKey] = { ...profile, active: makeActive };
+                localStorage.setItem('secure_app_users', JSON.stringify(cachedProfiles));
+                renderAdminTeacherList();
+            } catch(error) {
+                alert('Could not update this teacher. Check the Firestore rules and try again.');
+            }
+        }
+
+        async function createTeacherAccount() {
+            if(!currentUser || currentUser.role !== 'admin' || !db) {
+                alert('Only the signed-in administrator can create teacher accounts.');
+                return;
+            }
+            const role = document.getElementById('admin-teacher-role').value;
+            const name = document.getElementById('admin-teacher-name').value.trim();
+            const email = document.getElementById('admin-teacher-email').value.trim().toLowerCase();
+            const identifier = document.getElementById('admin-teacher-identifier').value.trim();
+            const password = document.getElementById('admin-teacher-password').value;
+            const teacherClass = document.getElementById('admin-teacher-class').value.trim();
+            const subject = document.getElementById('admin-teacher-subject').value.trim();
+            const status = document.getElementById('admin-teacher-status');
+            if(!name || !email || !identifier || !teacherClass || password.length < 6 || (role === 'subject-teacher' && !subject)) {
+                status.textContent = 'Complete every field. Passwords must have at least 6 characters.';
+                return;
+            }
+
+            let newUser = null;
+            status.textContent = 'Creating teacher sign-in…';
+            try {
+                const appName = 'teacher-account-provisioning';
+                teacherProvisioningApp = firebase.apps.find(app => app.name === appName) || firebase.initializeApp(firebaseConfig, appName);
+                const teacherAuth = firebase.auth(teacherProvisioningApp);
+                const credential = await teacherAuth.createUserWithEmailAndPassword(email, password);
+                newUser = credential.user;
+                const teacherProfile = {
+                    uid: newUser.uid,
+                    role,
+                    name,
+                    identifier,
+                    email,
+                    studentClass: role === 'class-teacher' ? teacherClass : '',
+                    teacherClass,
+                    subject: role === 'subject-teacher' ? subject : '',
+                    active: true,
+                    createdAt: Date.now(),
+                    createdByUid: currentUser.uid
+                };
+                await db.collection('profiles').doc(newUser.uid).set(teacherProfile);
+                try { await teacherAuth.signOut(); } catch(signOutError) {}
+                const cachedProfiles = JSON.parse(localStorage.getItem('secure_app_users') || '{}');
+                cachedProfiles[identifier] = teacherProfile;
+                localStorage.setItem('secure_app_users', JSON.stringify(cachedProfiles));
+                ['admin-teacher-name', 'admin-teacher-email', 'admin-teacher-identifier', 'admin-teacher-password', 'admin-teacher-class', 'admin-teacher-subject'].forEach(id => document.getElementById(id).value = '');
+                status.textContent = 'Teacher account created. The teacher can now sign in with this email and temporary password.';
+                renderAdminTeacherList();
+            } catch(error) {
+                if(newUser) {
+                    try { await newUser.delete(); } catch(cleanupError) {}
+                }
+                const messages = {
+                    'auth/email-already-in-use': 'That email already has a Firebase account.',
+                    'auth/invalid-email': 'Enter a valid email address.',
+                    'auth/weak-password': 'Choose a password with at least 6 characters.'
+                };
+                status.textContent = messages[error.code] || 'Could not create the teacher account. Check your Firebase connection and Firestore rules.';
+            }
+        }
+
+        function switchAuthMode(mode) {
+            stopAllCameraStreams();
+            ['login', 'signup', 'forgot'].forEach(m => {
+                const tab = document.getElementById(`sub-${m}`);
+                if(tab) tab.classList.remove('active-sub');
+                document.getElementById(`auth-${m}-container`).classList.add('hidden');
+            });
+            const selectedTab = document.getElementById(`sub-${mode}`);
+            if(selectedTab) selectedTab.classList.add('active-sub');
+            document.getElementById('auth-switcher').classList.toggle('hidden', mode === 'forgot');
+            document.getElementById(`auth-${mode}-container`).classList.remove('hidden');
+
+            if(mode === 'login') {
+                toggleLoginFaceRequirement();
+                toggleLoginFields();
+            }
+            if(mode === 'signup') toggleSignupFields();
+        }
+
+        function toggleLoginFields() {
+            const role = document.getElementById('login-role').value;
+            const loginClassGroup = document.getElementById('login-class-group');
+            const faceBox = document.getElementById('login-face-box');
+
+            if(role === 'class-teacher' || role === 'admin') {
+                loginClassGroup.classList.add('hidden');
+                faceBox.classList.add('hidden');
+                stopAllCameraStreams();
+                if(role === 'class-teacher') loginClassGroup.classList.remove('hidden');
+            } else if(role === 'subject-teacher') {
+                loginClassGroup.classList.add('hidden');
+                faceBox.classList.add('hidden');
+                stopAllCameraStreams();
+            } else {
+                loginClassGroup.classList.add('hidden');
+                faceBox.classList.add('hidden');
+                stopAllCameraStreams();
+            }
+        }
+
+        function toggleSignupFields() {
+            const role = document.getElementById('signup-role').value;
+            const classGroup = document.getElementById('signup-class-group');
+            const classTeacherGroup = document.getElementById('signup-class-teacher-group');
+            const teacherClassGroup = document.getElementById('signup-teacher-class-group');
+            const subGroup = document.getElementById('signup-subject-group');
+            const faceBox = document.getElementById('signup-face-box');
+            
+            if(role === 'student') {
+                classGroup.classList.remove('hidden');
+                classTeacherGroup.classList.add('hidden');
+                teacherClassGroup.classList.add('hidden');
+                subGroup.classList.add('hidden');
+                faceBox.classList.add('hidden');
+                stopAllCameraStreams();
+            } else if(role === 'class-teacher') {
+                classGroup.classList.add('hidden');
+                classTeacherGroup.classList.remove('hidden');
+                teacherClassGroup.classList.add('hidden');
+                subGroup.classList.add('hidden');
+                faceBox.classList.add('hidden');
+                stopAllCameraStreams();
+            } else if(role === 'subject-teacher') {
+                classGroup.classList.add('hidden');
+                classTeacherGroup.classList.add('hidden');
+                teacherClassGroup.classList.remove('hidden');
+                subGroup.classList.remove('hidden');
+                faceBox.classList.add('hidden');
+                stopAllCameraStreams();
+            } else if(role === 'admin') {
+                classGroup.classList.add('hidden');
+                classTeacherGroup.classList.add('hidden');
+                teacherClassGroup.classList.add('hidden');
+                subGroup.classList.add('hidden');
+                faceBox.classList.add('hidden');
+                stopAllCameraStreams();
+            }
+        }
+
+        function toggleLoginFaceRequirement() {
+            const faceBox = document.getElementById('login-face-box');
+            if(faceBox) faceBox.classList.add('hidden');
+            stopAllCameraStreams();
+        }
+
+        async function handleUserSignup() {
+            const role = document.getElementById('signup-role').value;
+            const name = document.getElementById('signup-name').value.trim();
+            const identifier = document.getElementById('signup-identifier').value.trim();
+            const password = document.getElementById('signup-password').value.trim();
+            const email = document.getElementById('signup-email').value.trim().toLowerCase();
+            const studentClass = role === 'student' ? document.getElementById('signup-class').value : '';
+            const classTeacherClass = role === 'class-teacher' ? document.getElementById('signup-class-teacher-class').value : '';
+            const teacherClass = role === 'subject-teacher' ? document.getElementById('signup-teacher-class').value : '';
+            const subject = role === 'subject-teacher' ? document.getElementById('signup-subject').value : '';
+
+            if(!requireCloudDatabase()) return;
+            if(role !== 'student') { alert('Teacher accounts must be created and assigned by the school administrator.'); return; }
+            if(!name || !identifier || !email || !password) { alert('Fill out all fields.'); return; }
+            const assignedClass = role === 'class-teacher' ? classTeacherClass : (role === 'subject-teacher' ? teacherClass : studentClass);
+            stopAllCameraStreams();
+            let newFirebaseUser = null;
+            try {
+                const credential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                newFirebaseUser = credential.user;
+                const userData = {
+                    uid: credential.user.uid,
+                    role: 'student',
+                    name,
+                    identifier,
+                    email,
+                    studentClass: assignedClass,
+                    teacherClass: assignedClass,
+                    subject: '',
+                    createdAt: Date.now()
+                };
+                const profileRef = db.collection('profiles').doc(credential.user.uid);
+                const studentIdRef = db.collection('studentIds').doc(firestoreSafeId(identifier));
+                await db.runTransaction(async transaction => {
+                    const existingId = await transaction.get(studentIdRef);
+                    if(existingId.exists) throw new Error('This student ID is already registered.');
+                    transaction.set(profileRef, userData);
+                    transaction.set(studentIdRef, { uid: credential.user.uid, identifier });
+                });
+                await firebase.auth().signOut();
+                alert('Account registered in Firebase. Sign in using your email and password.');
+                switchAuthMode('login');
+            } catch(error) {
+                if(newFirebaseUser && firebase.auth().currentUser) {
+                    try { await newFirebaseUser.delete(); } catch(cleanupError) {}
+                    await firebase.auth().signOut();
+                }
+                const message = error.message.includes('already registered')
+                    ? error.message
+                    : error.code === 'auth/email-already-in-use'
+                        ? 'That email already has an account. Sign in or reset its password.'
+                        : error.code === 'auth/weak-password'
+                            ? 'Choose a password with at least 6 characters.'
+                            : error.code === 'auth/invalid-email'
+                                ? 'Enter a valid email address.'
+                                : 'Could not create the account. Check your internet connection and Firebase setup.';
+                alert(message);
+            }
+        }
+
+        async function handlePasswordReset() {
+            const email = document.getElementById('forgot-email').value.trim();
+            const status = document.getElementById('password-reset-status');
+            status.textContent = '';
+            if(!email) {
+                status.textContent = 'Enter the email address linked to your account.';
+                return;
+            }
+            if(!window.firebase?.apps?.length || !firebase.auth) {
+                status.textContent = 'Firebase could not load. Check your internet connection and open the app from localhost or its HTTPS website, then refresh.';
+                return;
+            }
+            try {
+                await firebase.auth().sendPasswordResetEmail(email);
+                status.textContent = 'If an account exists for that email, a reset link has been sent. Check your inbox and spam folder.';
+            } catch(error) {
+                const messages = {
+                    'auth/invalid-email': 'Enter a valid email address.',
+                    'auth/operation-not-allowed': 'Email/Password sign-in is disabled. Enable it in Firebase Console under Authentication > Sign-in method.',
+                    'auth/unauthorized-domain': 'This website address is not authorized. Add it under Firebase Authentication > Settings > Authorized domains.',
+                    'auth/network-request-failed': 'The request failed. Check your internet connection and try again.',
+                    'auth/too-many-requests': 'Too many attempts. Wait a while, then try again.'
+                };
+                status.textContent = messages[error.code] || 'Could not send the reset link. Check Firebase Authentication settings and try again.';
+            }
+        }
+
+        async function handleUserLogin() {
+            const role = document.getElementById('login-role').value;
+            const identifier = document.getElementById('login-identifier').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const loginClassInput = document.getElementById('login-class').value;
+
+            if(!requireCloudDatabase()) return;
+            if(!identifier || !password) { alert('Enter your email and password.'); return; }
+            let storedUser;
+            try {
+                const credential = await firebase.auth().signInWithEmailAndPassword(identifier.toLowerCase(), password);
+                const profileSnapshot = await db.collection('profiles').doc(credential.user.uid).get();
+                if(!profileSnapshot.exists) {
+                    await firebase.auth().signOut();
+                    alert('Your account profile is not provisioned. Contact the school administrator.');
+                    return;
+                }
+                storedUser = { ...profileSnapshot.data(), uid: credential.user.uid };
+                if(storedUser.active === false) {
+                    await firebase.auth().signOut();
+                    alert('This account has been deactivated. Contact the school administrator.');
+                    return;
+                }
+                if(storedUser.role !== role) {
+                    await firebase.auth().signOut();
+                    alert('The selected account role does not match this account.');
+                    return;
+                }
+            } catch(error) {
+                alert(error.code === 'auth/too-many-requests'
+                    ? 'Too many attempts. Wait a while and try again.'
+                    : 'Sign-in failed. Check your email and password, or use password recovery.');
+                return;
+            }
+
+            if(role === 'class-teacher' && storedUser.studentClass && storedUser.studentClass !== loginClassInput) {
+                alert(`Class mismatch! This account is registered for class ${storedUser.studentClass}, but you selected ${loginClassInput}.`);
+                return;
+            }
+
+            if(role === 'class-teacher' && !storedUser.studentClass) {
+                storedUser.studentClass = loginClassInput;
+                storedUser.teacherClass = loginClassInput;
+            }
+
+            currentUser = storedUser;
+            startCloudDataSync(currentUser);
+            stopAllCameraStreams();
+            alert(`Login Successful! Welcome, ${currentUser.name}`);
+
+            document.getElementById('nav-auth').classList.add('hidden');
+            if(currentUser.role === 'student') {
+                document.getElementById('nav-student').classList.remove('hidden');
+                document.getElementById('student-profile-label').innerText = `${currentUser.name} (${currentUser.identifier})`;
+                document.getElementById('student-class-label').innerText = currentUser.studentClass || 'JSS 1';
+                switchTab('student');
+            } else if(currentUser.role === 'subject-teacher') {
+                document.getElementById('nav-subject-teacher').classList.remove('hidden');
+                document.getElementById('subject-teacher-label').innerText = `${currentUser.name} (${currentUser.identifier})`;
+                document.getElementById('subject-teacher-class').innerText = currentUser.teacherClass || 'JSS 1';
+                document.getElementById('subject-teacher-subject').innerText = currentUser.subject;
+                switchTab('subject-teacher');
+            } else if(currentUser.role === 'class-teacher') {
+                document.getElementById('nav-class-teacher').classList.remove('hidden');
+                document.getElementById('class-teacher-label').innerText = `${currentUser.name} (${currentUser.identifier})`;
+                document.getElementById('class-teacher-class-label').innerText = currentUser.studentClass || loginClassInput;
+                switchTab('class-teacher');
+            } else if(currentUser.role === 'admin') {
+                document.getElementById('nav-admin-proctor').classList.remove('hidden');
+                document.getElementById('nav-analytics').classList.remove('hidden');
+                document.getElementById('admin-profile-label').innerText = `${currentUser.name} (${currentUser.identifier})`;
+                switchTab('admin-proctor');
+            }
+        }
+
+        function logoutUser() {
+            stopAllCameraStreams();
+            stopCloudListeners();
+            if(timerInterval) clearInterval(timerInterval);
+            if(neckTurnSensorInterval) clearInterval(neckTurnSensorInterval);
+            currentUser = null;
+            if(window.firebase?.auth) firebase.auth().signOut().finally(() => location.reload());
+            else location.reload();
+        }
+
+        async function loadExamsList() {
+            const select = document.getElementById('exam-select');
+            select.innerHTML = '<option value="">-- Choose Exam --</option>';
+
+            let savedExams = JSON.parse(localStorage.getItem('secure_published_exams') || '[]');
+            let submissions = JSON.parse(localStorage.getItem('secure_student_attempts') || '[]');
+
+            let studentClass = currentUser.studentClass || 'JSS 1';
+            let classExams = savedExams.filter(ex => ex.assignedClass === studentClass);
+
+            window.fetchedExamsCache = classExams;
+            classExams.forEach((ex, idx) => {
+                let alreadyTaken = submissions.some(s => s.studentUid === currentUser.uid && s.examId === ex.id);
+                let opt = document.createElement('option');
+                opt.value = idx;
+                if(alreadyTaken) {
+                    opt.innerText = `[COMPLETED] ${ex.subject} - ${ex.batchTitle} (${ex.assignedClass})`;
+                    opt.disabled = true;
+                } else {
+                    opt.innerText = `${ex.subject} - ${ex.batchTitle} (${ex.assignedClass})`;
+                }
+                select.appendChild(opt);
+            });
+        }
+
+        const createPracticeQuestion = (question, a, b, c, d, answer) => ({ question, options: [a, b, c, d], answer });
+        const demoPracticeQuestions = {
+            'English Language': [
+                createPracticeQuestion('Choose the correctly punctuated sentence.', 'where are you going.', 'Where are you going?', 'Where are you going,', 'where are you going!', 1),
+                createPracticeQuestion('What is the plural of “child”?', 'Childs', 'Childes', 'Children', 'Childrens', 2),
+                createPracticeQuestion('Choose the word nearest in meaning to “reluctant”.', 'Unwilling', 'Eager', 'Careless', 'Cheerful', 0),
+                createPracticeQuestion('In “The tall boy ran quickly,” which word is an adverb?', 'Tall', 'Boy', 'Ran', 'Quickly', 3),
+                createPracticeQuestion('Choose the correct verb: “Neither of the girls _____ late.”', 'Are', 'Were', 'Is', 'Have', 2),
+                createPracticeQuestion('What is the opposite of “ancient”?', 'Old', 'Modern', 'Historic', 'Past', 1),
+                createPracticeQuestion('Which sentence is in the past tense?', 'Ada visits her aunt.', 'Ada is visiting her aunt.', 'Ada visited her aunt.', 'Ada will visit her aunt.', 2),
+                createPracticeQuestion('Choose the correct word: “The teacher gave the books to Chika and _____.”', 'I', 'Me', 'My', 'Mine', 1),
+                createPracticeQuestion('A person who writes poems is a _____.', 'Poet', 'Pilot', 'Painter', 'Player', 0),
+                createPracticeQuestion('Which word is a conjunction in “I studied hard but felt nervous”?', 'Studied', 'Hard', 'But', 'Nervous', 2)
+            ],
+            Mathematics: [
+                createPracticeQuestion('Evaluate 36 ÷ 4 + 5.', '9', '14', '20', '41', 1),
+                createPracticeQuestion('What is 3/4 of 28?', '7', '18', '21', '24', 2),
+                createPracticeQuestion('Simplify 18/24 to its lowest terms.', '2/3', '3/4', '4/5', '6/8', 1),
+                createPracticeQuestion('Find the perimeter of a rectangle 8 cm long and 5 cm wide.', '13 cm', '26 cm', '40 cm', '80 cm', 1),
+                createPracticeQuestion('Solve 3x + 4 = 19.', '3', '4', '5', '7', 2),
+                createPracticeQuestion('Convert 0.35 to a percentage.', '3.5%', '35%', '350%', '0.35%', 1),
+                createPracticeQuestion('An angle on a straight line is 125°. Find the adjacent angle.', '45°', '55°', '65°', '125°', 1),
+                createPracticeQuestion('Find the mean of 4, 6, 8 and 10.', '6', '7', '8', '28', 1),
+                createPracticeQuestion('A trader buys an item for ₦2,400 and sells it for ₦3,000. What is the profit?', '₦400', '₦500', '₦600', '₦5,400', 2),
+                createPracticeQuestion('What is the area of a triangle with base 10 cm and height 6 cm?', '16 cm²', '30 cm²', '60 cm²', '120 cm²', 1)
+            ],
+            'Basic Science': [
+                createPracticeQuestion('Which part of a plant absorbs most water from the soil?', 'Flower', 'Root hairs', 'Fruit', 'Stem tip', 1),
+                createPracticeQuestion('Which state of matter has a fixed shape and a fixed volume?', 'Gas', 'Liquid', 'Solid', 'Vapour', 2),
+                createPracticeQuestion('Which organ pumps blood around the human body?', 'Lungs', 'Heart', 'Stomach', 'Kidney', 1),
+                createPracticeQuestion('Green plants make food by a process called _____.', 'Respiration', 'Photosynthesis', 'Digestion', 'Fermentation', 1),
+                createPracticeQuestion('Which gas do humans need for aerobic respiration?', 'Nitrogen', 'Oxygen', 'Carbon dioxide', 'Hydrogen', 1),
+                createPracticeQuestion('The change of liquid water into water vapour is called _____.', 'Freezing', 'Condensation', 'Evaporation', 'Melting', 2),
+                createPracticeQuestion('Which simple machine is a sloping surface used to raise a load?', 'Pulley', 'Lever', 'Inclined plane', 'Wheel and axle', 2),
+                createPracticeQuestion('Which of these is a renewable source of energy?', 'Coal', 'Petroleum', 'Sunlight', 'Natural gas', 2),
+                createPracticeQuestion('Which blood cells help the body fight infection?', 'Red blood cells', 'White blood cells', 'Platelets', 'Plasma only', 1),
+                createPracticeQuestion('The force that pulls objects towards Earth is _____.', 'Friction', 'Magnetism', 'Gravity', 'Upthrust', 2)
+            ],
+            'Basic Technology': [
+                createPracticeQuestion('Which tool is designed for driving nails into wood?', 'Hammer', 'Spanner', 'Pliers', 'File', 0),
+                createPracticeQuestion('Which material is a good electrical conductor?', 'Rubber', 'Dry wood', 'Copper', 'Glass', 2),
+                createPracticeQuestion('A drawing showing an object from above is called the _____ view.', 'Front', 'Plan', 'Side', 'Section', 1),
+                createPracticeQuestion('Which personal protective equipment protects the eyes during workshop work?', 'Goggles', 'Apron', 'Boots', 'Gloves', 0),
+                createPracticeQuestion('The process of joining metal parts using heat and filler metal is _____.', 'Soldering', 'Casting', 'Planing', 'Weaving', 0),
+                createPracticeQuestion('Which instrument is used to measure an electrical current?', 'Voltmeter', 'Ammeter', 'Thermometer', 'Barometer', 1),
+                createPracticeQuestion('A triangular drawing instrument is commonly used to draw _____.', 'Circles only', 'Parallel and perpendicular lines', 'Irregular curves only', 'Shadows', 1),
+                createPracticeQuestion('Which of these is a building component that supports a roof?', 'Foundation', 'Column', 'Window pane', 'Gutter', 1),
+                createPracticeQuestion('The first stage in solving a design problem is to _____.', 'Paint the product', 'Identify the problem', 'Sell the product', 'Discard all materials', 1),
+                createPracticeQuestion('Which fastener can be removed and reused without damaging the joined parts?', 'Weld', 'Glue', 'Bolt and nut', 'Rivet', 2)
+            ],
+            'Social Studies': [
+                createPracticeQuestion('The smallest basic unit of society is the _____.', 'Family', 'Market', 'Government', 'School', 0),
+                createPracticeQuestion('Which is the best peaceful way to settle a disagreement?', 'Listening and dialogue', 'Insults', 'Fighting', 'Spreading rumours', 0),
+                createPracticeQuestion('A map key explains the meaning of map _____.', 'Symbols', 'Weather', 'Age', 'Paper size', 0),
+                createPracticeQuestion('The movement of people from one place to another to live is called _____.', 'Migration', 'Recreation', 'Inflation', 'Communication', 0),
+                createPracticeQuestion('Which is an example of a cultural practice?', 'A community’s traditional festival', 'A traffic light', 'A bank balance', 'A road sign', 0),
+                createPracticeQuestion('A person who moves from a rural area to a city is involved in _____ migration.', 'Rural-to-urban', 'Urban-to-rural', 'International', 'Seasonal only', 0),
+                createPracticeQuestion('Which action helps protect the environment?', 'Dumping refuse in drains', 'Planting trees', 'Burning plastics openly', 'Wasting clean water', 1),
+                createPracticeQuestion('A group of people living and working together in one area is a _____.', 'Community', 'Currency', 'Climate', 'Continent', 0),
+                createPracticeQuestion('Which resource is most useful for showing direction and location?', 'Map', 'Diary', 'Receipt', 'Novel', 0),
+                createPracticeQuestion('Cooperation among members of a community helps to _____.', 'Achieve shared goals', 'Increase conflict', 'Stop communication', 'Waste resources', 0)
+            ],
+            'Civic Education': [
+                createPracticeQuestion('Which is a responsibility of a citizen?', 'Obeying the law', 'Damaging public property', 'Denying others their rights', 'Avoiding all duties', 0),
+                createPracticeQuestion('The rule of law means that _____.', 'Only children obey laws', 'Everyone is subject to the law', 'Leaders are above the law', 'Laws apply only at night', 1),
+                createPracticeQuestion('Respecting people with different views demonstrates _____.', 'Tolerance', 'Corruption', 'Violence', 'Negligence', 0),
+                createPracticeQuestion('A constitution is best described as _____.', 'A country’s fundamental set of laws', 'A list of market prices', 'A school timetable', 'A personal diary', 0),
+                createPracticeQuestion('Which institution is responsible for making laws in a democracy?', 'Legislature', 'Police station', 'Hospital', 'Market union', 0),
+                createPracticeQuestion('A free and fair election allows citizens to _____.', 'Choose leaders without intimidation', 'Vote more than once', 'Sell their votes', 'Prevent others from voting', 0),
+                createPracticeQuestion('Which is a fundamental right?', 'Right to life', 'Right to steal', 'Right to destroy property', 'Right to ignore court orders', 0),
+                createPracticeQuestion('Corruption harms society mainly because it _____.', 'Misuses public resources', 'Encourages fairness', 'Improves accountability', 'Protects equal rights', 0),
+                createPracticeQuestion('A good way for young people to contribute to their community is to _____.', 'Volunteer in a clean-up', 'Damage public facilities', 'Spread false information', 'Refuse to cooperate', 0),
+                createPracticeQuestion('The arm of government that interprets laws is the _____.', 'Judiciary', 'Executive', 'Legislature', 'Civil service only', 0)
+            ],
+            'Computer Studies': [
+                createPracticeQuestion('Which device is mainly used to enter text into a computer?', 'Monitor', 'Keyboard', 'Speaker', 'Printer', 1),
+                createPracticeQuestion('Which component processes computer instructions?', 'CPU', 'Mouse pad', 'Desk', 'Headphones', 0),
+                createPracticeQuestion('Which is a safe password practice?', 'Share it publicly', 'Use your name only', 'Keep it private and hard to guess', 'Write it on a public notice', 2),
+                createPracticeQuestion('Which device displays visual output from a computer?', 'Monitor', 'Microphone', 'Scanner', 'Joystick', 0),
+                createPracticeQuestion('A set of instructions that tells a computer what to do is called _____.', 'Software', 'Hardware', 'Furniture', 'Electricity', 0),
+                createPracticeQuestion('Which of these is an example of an operating system?', 'Microsoft Windows', 'A keyboard', 'A printer cable', 'A flash drive', 0),
+                createPracticeQuestion('What is the main purpose of saving a file?', 'To keep it for later use', 'To delete it', 'To turn off the monitor', 'To print it automatically', 0),
+                createPracticeQuestion('Which key usually starts a new line in a word processor?', 'Shift', 'Enter', 'Caps Lock', 'Escape', 1),
+                createPracticeQuestion('The internet is best described as _____.', 'A worldwide network of connected computers', 'A type of keyboard', 'A single computer game', 'A computer screen', 0),
+                createPracticeQuestion('Which action helps avoid malware?', 'Install updates and use trusted security software', 'Open every unknown attachment', 'Share passwords online', 'Disable all security features', 0)
+            ],
+            'Agricultural Science': [
+                createPracticeQuestion('Which farm tool is commonly used for loosening soil?', 'Hoe', 'Ruler', 'Stapler', 'Compass', 0),
+                createPracticeQuestion('Green plants use sunlight to make food through _____.', 'Photosynthesis', 'Germination', 'Pollination', 'Harvesting', 0),
+                createPracticeQuestion('Which animal is a ruminant?', 'Goat', 'Chicken', 'Fish', 'Rabbit', 0),
+                createPracticeQuestion('The upper layer of soil that supports most crop growth is _____ soil.', 'Top', 'Bedrock', 'Subsoil only', 'Parent rock', 0),
+                createPracticeQuestion('Which nutrient is commonly supplied to plants by compost manure?', 'Organic matter', 'Plastic', 'Kerosene', 'Salt water', 0),
+                createPracticeQuestion('The planting of seeds in prepared soil is called _____.', 'Sowing', 'Weeding', 'Threshing', 'Pruning', 0),
+                createPracticeQuestion('Which practice helps control weeds on a small farm?', 'Hand weeding', 'Overwatering', 'Leaving weeds to seed', 'Burning stored grain', 0),
+                createPracticeQuestion('Which farm animal mainly provides eggs?', 'Layer chicken', 'Bull', 'Ram', 'Donkey', 0),
+                createPracticeQuestion('The removal of mature crops from the field is called _____.', 'Harvesting', 'Irrigation', 'Transplanting', 'Fertilising', 0),
+                createPracticeQuestion('Crop rotation helps maintain soil fertility by _____.', 'Growing different crops in sequence', 'Planting one crop forever', 'Removing all topsoil', 'Stopping all planting', 0)
+            ],
+            'Business Studies': [
+                createPracticeQuestion('A person who buys goods for personal use is a _____.', 'Consumer', 'Producer', 'Driver', 'Wholesaler', 0),
+                createPracticeQuestion('Which document lists goods sold and the amount owed?', 'Invoice', 'Timetable', 'Map', 'Poster', 0),
+                createPracticeQuestion('Saving means _____.', 'Keeping some money for future use', 'Spending all income immediately', 'Borrowing without a plan', 'Throwing money away', 0),
+                createPracticeQuestion('A business owned and controlled by one person is a _____.', 'Sole proprietorship', 'Partnership', 'Cooperative society', 'Public corporation', 0),
+                createPracticeQuestion('The difference between selling price and cost price is _____.', 'Profit or loss', 'Discount only', 'Capital only', 'Salary', 0),
+                createPracticeQuestion('Which office equipment makes paper copies of documents?', 'Photocopier', 'Stapler', 'Calculator', 'Telephone', 0),
+                createPracticeQuestion('A receipt is issued mainly as proof of _____.', 'Payment', 'Employment', 'Delivery route', 'Ownership of a school', 0),
+                createPracticeQuestion('Which quality is important for a successful entrepreneur?', 'Willingness to plan and take calculated risks', 'Refusal to learn', 'Dishonesty', 'Avoiding customers', 0),
+                createPracticeQuestion('Goods bought for resale are called _____.', 'Stock', 'Wages', 'Rent', 'Capital loss', 0),
+                createPracticeQuestion('A bank account used mainly for frequent business transactions is a _____.', 'Current account', 'Fixed deposit only', 'School register', 'Petty cash voucher', 0)
+            ],
+            'Home Economics': [
+                createPracticeQuestion('Which nutrient helps the body grow and repair tissues?', 'Protein', 'Sand', 'Smoke', 'Plastic', 0),
+                createPracticeQuestion('Which practice helps prevent food contamination?', 'Washing hands before cooking', 'Leaving food uncovered', 'Using dirty utensils', 'Storing raw meat above cooked food', 0),
+                createPracticeQuestion('A balanced meal contains _____.', 'Different nutrients in suitable amounts', 'Only sweets', 'One food type every day', 'No water', 0),
+                createPracticeQuestion('Which nutrient is the body’s main source of energy?', 'Carbohydrate', 'Vitamin C', 'Water', 'Mineral salts', 0),
+                createPracticeQuestion('A clothing label usually gives information about _____.', 'Fabric care and size', 'The wearer’s school grades', 'Weather forecasts', 'Food ingredients', 0),
+                createPracticeQuestion('Which method helps preserve food by removing moisture?', 'Drying', 'Leaving it in rain', 'Adding dirt', 'Keeping it uncovered outdoors', 0),
+                createPracticeQuestion('A household budget helps a family to _____.', 'Plan income and spending', 'Increase waste', 'Avoid keeping records', 'Spend without limits', 0),
+                createPracticeQuestion('Which kitchen tool is used to measure liquid ingredients?', 'Measuring jug', 'Sieve', 'Grater', 'Peeler', 0),
+                createPracticeQuestion('Which action is safest when handling a hot pot?', 'Use a dry oven mitt', 'Hold it with a wet cloth', 'Touch the metal bare-handed', 'Place it on the edge of a table', 0),
+                createPracticeQuestion('Personal hygiene includes _____.', 'Bathing regularly and wearing clean clothes', 'Sharing toothbrushes', 'Ignoring handwashing', 'Wearing damp clothes for days', 0)
+            ],
+            'Physical & Health Education': [
+                createPracticeQuestion('Which activity is a cardiovascular exercise?', 'Jogging', 'Sleeping', 'Reading silently', 'Drawing', 0),
+                createPracticeQuestion('What should you do before vigorous exercise?', 'Warm up', 'Hold your breath', 'Avoid moving', 'Eat a very large meal immediately', 0),
+                createPracticeQuestion('Which habit helps prevent many infections?', 'Regular handwashing', 'Sharing used tissues', 'Drinking unsafe water', 'Never cleaning surfaces', 0),
+                createPracticeQuestion('Which component of fitness is the ability to bend joints through a wide range?', 'Flexibility', 'Speed', 'Balance only', 'Body mass', 0),
+                createPracticeQuestion('In a relay race, runners pass a _____.', 'Baton', 'Racket', 'Net', 'Whistle', 0),
+                createPracticeQuestion('Which nutrient helps replace water lost through sweating?', 'Water', 'Chalk', 'Smoke', 'Cooking oil', 0),
+                createPracticeQuestion('A sprain is an injury to a _____.', 'Ligament around a joint', 'Tooth enamel', 'Hair follicle', 'Nail only', 0),
+                createPracticeQuestion('Which action promotes safety during sport?', 'Follow rules and use suitable equipment', 'Push other players', 'Ignore instructions', 'Play on a damaged field', 0),
+                createPracticeQuestion('The ability to change direction quickly while moving is _____.', 'Agility', 'Height', 'Weight', 'Flexion only', 0),
+                createPracticeQuestion('A cool-down after exercise helps the body _____.', 'Return gradually to its resting state', 'Stop breathing', 'Become dehydrated', 'Avoid circulation', 0)
+            ],
+            'Christian Religious Studies': [
+                createPracticeQuestion('In the Christian Bible, who built an ark?', 'Noah', 'Moses', 'David', 'Peter', 0),
+                createPracticeQuestion('The parable of the Good Samaritan teaches care for _____.', 'People in need', 'Only close friends', 'No one', 'Only wealthy people', 0),
+                createPracticeQuestion('Which quality is associated with treating others fairly?', 'Justice', 'Greed', 'Dishonesty', 'Cruelty', 0),
+                createPracticeQuestion('According to Genesis, who was the first man?', 'Adam', 'Abraham', 'Jacob', 'Joseph', 0),
+                createPracticeQuestion('Moses led the Israelites out of _____.', 'Egypt', 'Rome', 'Babylon', 'Greece', 0),
+                createPracticeQuestion('In the New Testament, Jesus was born in _____.', 'Bethlehem', 'Jerusalem', 'Nazareth', 'Capernaum', 0),
+                createPracticeQuestion('The Golden Rule teaches people to _____.', 'Treat others as they wish to be treated', 'Seek revenge quickly', 'Ignore people in need', 'Keep every possession', 0),
+                createPracticeQuestion('Who betrayed Jesus for thirty pieces of silver?', 'Judas Iscariot', 'John the Baptist', 'Stephen', 'Barnabas', 0),
+                createPracticeQuestion('The first four books of the New Testament are called the _____.', 'Gospels', 'Psalms', 'Prophets', 'Epistles of Paul', 0),
+                createPracticeQuestion('A Christian value shown by forgiving someone is _____.', 'Mercy', 'Envy', 'Pride', 'Greed', 0)
+            ],
+            'Islamic Religious Studies': [
+                createPracticeQuestion('What is the holy book of Islam?', 'Qur’an', 'Torah', 'Vedas', 'Iliad', 0),
+                createPracticeQuestion('What is the Arabic term for the five daily prayers?', 'Salah', 'Zakat', 'Sawm', 'Hajj', 0),
+                createPracticeQuestion('Which value encourages Muslims to give to people in need?', 'Charity', 'Wastefulness', 'Pride', 'Dishonesty', 0),
+                createPracticeQuestion('The month in which Muslims fast from dawn to sunset is _____.', 'Ramadan', 'Muharram', 'Shawwal', 'Safar', 0),
+                createPracticeQuestion('The pilgrimage to Makkah is called _____.', 'Hajj', 'Salah', 'Zakat', 'Wudu', 0),
+                createPracticeQuestion('Before performing Salah, a Muslim commonly performs ritual washing called _____.', 'Wudu', 'Tawaf', 'Sawm', 'Adhan', 0),
+                createPracticeQuestion('The migration of Prophet Muhammad from Makkah to Madinah is known as the _____.', 'Hijrah', 'Hajj', 'Qiblah', 'Khutbah', 0),
+                createPracticeQuestion('Zakat is an act of _____.', 'Giving prescribed charity', 'Daily prayer', 'Fasting', 'Pilgrimage', 0),
+                createPracticeQuestion('The direction Muslims face during Salah is towards the _____.', 'Ka‘bah in Makkah', 'Mount Uhud', 'Nile River', 'Cave of Hira', 0),
+                createPracticeQuestion('The call that announces the time for prayer is the _____.', 'Adhan', 'Khutbah', 'Tawaf', 'Sawm', 0)
+            ]
+        };
+
+        let currentPracticeSubject = '';
+        let currentPracticeIndex = 0;
+        let currentPracticeScore = 0;
+        let currentPracticeSelection = null;
+        let currentPracticeChecked = false;
+        let currentPracticeQuestions = [];
+
+        function switchStudentSubTab(tab) {
+            const showResults = tab === 'results';
+            document.getElementById('student-exams-panel').classList.toggle('hidden', showResults);
+            document.getElementById('student-results-panel').classList.toggle('hidden', !showResults);
+            [['exams', !showResults], ['results', showResults]].forEach(([name, active]) => {
+                const button = document.getElementById(`student-tab-${name}`);
+                button.classList.toggle('active-sub', active);
+                button.setAttribute('aria-selected', String(active));
+            });
+            if(showResults) refreshStudentResults();
+            else loadExamsList();
+        }
+
+        function initializePracticeQuestions() {
+            const select = document.getElementById('student-practice-subject');
+            if(!select.options.length) {
+                select.innerHTML = Object.keys(demoPracticeQuestions).map(subject => `<option value="${escapeHTML(subject)}">${escapeHTML(subject)}</option>`).join('');
+            }
+            startPracticeSet();
+        }
+
+        function startPracticeSet() {
+            const select = document.getElementById('student-practice-subject');
+            if(!select || !select.value) return;
+            currentPracticeSubject = select.value;
+            currentPracticeIndex = 0;
+            currentPracticeScore = 0;
+            currentPracticeSelection = null;
+            currentPracticeChecked = false;
+            currentPracticeQuestions = demoPracticeQuestions[currentPracticeSubject].map(question => {
+                const choices = question.options.map((text, index) => ({ text, correct: index === question.answer }));
+                for(let index = choices.length - 1; index > 0; index--) {
+                    const swapIndex = Math.floor(Math.random() * (index + 1));
+                    [choices[index], choices[swapIndex]] = [choices[swapIndex], choices[index]];
+                }
+                return { ...question, options: choices.map(choice => choice.text), answer: choices.findIndex(choice => choice.correct) };
+            });
+            renderPracticeQuestion();
+        }
+
+        function renderPracticeQuestion() {
+            const container = document.getElementById('student-practice-content');
+            const questions = currentPracticeQuestions;
+            if(currentPracticeIndex >= questions.length) {
+                container.innerHTML = `<div style="border:1px solid #cbd5e1;border-radius:12px;padding:18px;"><h3>Practice complete</h3><p>You scored ${currentPracticeScore} out of ${questions.length} in ${escapeHTML(currentPracticeSubject)}.</p><button class="btn" style="max-width:220px;" onclick="startPracticeSet()">Try again</button></div>`;
+                return;
+            }
+            const item = questions[currentPracticeIndex];
+            const options = item.options.map((option, index) => {
+                const isChosen = currentPracticeSelection === index;
+                const isCorrect = currentPracticeChecked && index === item.answer;
+                const isWrongChoice = currentPracticeChecked && isChosen && index !== item.answer;
+                const color = isCorrect ? '#15803d' : (isWrongChoice ? '#b91c1c' : '#334155');
+                const border = isCorrect ? '#86efac' : (isWrongChoice ? '#fca5a5' : '#cbd5e1');
+                return `<button type="button" ${currentPracticeChecked ? 'disabled' : ''} onclick="selectPracticeAnswer(${index})" style="display:block;width:100%;text-align:left;margin:8px 0;padding:12px;border:1px solid ${border};border-radius:8px;background:${isChosen ? '#eef2ff' : '#fff'};color:${color};cursor:pointer;">${String.fromCharCode(65 + index)}. ${escapeHTML(option)}</button>`;
+            }).join('');
+            const feedback = currentPracticeChecked ? `<p style="color:${currentPracticeSelection === item.answer ? '#15803d' : '#b91c1c'};font-weight:600;">${currentPracticeSelection === item.answer ? 'Correct!' : `Not quite. The correct answer is ${String.fromCharCode(65 + item.answer)}.`}</p>` : '';
+            const action = currentPracticeChecked
+                ? `<button class="btn" style="max-width:220px;" onclick="nextPracticeQuestion()">${currentPracticeIndex === questions.length - 1 ? 'Finish practice' : 'Next question'}</button>`
+                : '<button class="btn" style="max-width:220px;" onclick="checkPracticeAnswer()">Check answer</button>';
+            container.innerHTML = `<div style="border:1px solid #cbd5e1;border-radius:12px;padding:18px;"><p style="margin:0 0 8px;color:#64748b;">Question ${currentPracticeIndex + 1} of ${questions.length} · ${escapeHTML(currentPracticeSubject)}</p><h3 style="margin:0 0 14px;">${escapeHTML(item.question)}</h3>${options}${feedback}<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;">${action}<span style="color:#64748b;">Score: ${currentPracticeScore}</span></div></div>`;
+        }
+
+        function selectPracticeAnswer(index) {
+            if(currentPracticeChecked) return;
+            currentPracticeSelection = index;
+            renderPracticeQuestion();
+        }
+
+        function checkPracticeAnswer() {
+            if(currentPracticeSelection === null) { alert('Choose an answer first.'); return; }
+            const item = currentPracticeQuestions[currentPracticeIndex];
+            currentPracticeChecked = true;
+            if(currentPracticeSelection === item.answer) currentPracticeScore++;
+            renderPracticeQuestion();
+        }
+
+        function nextPracticeQuestion() {
+            currentPracticeIndex++;
+            currentPracticeSelection = null;
+            currentPracticeChecked = false;
+            renderPracticeQuestion();
+        }
+
+        function renderStudentResults() {
+            const tbody = document.getElementById('student-results-body');
+            if(!tbody || !currentUser?.uid) return;
+            const records = JSON.parse(localStorage.getItem('secure_student_results') || '[]')
+                .filter(record => record.studentUid === currentUser.uid)
+                .sort((first, second) => Number(second.timestamp) - Number(first.timestamp));
+
+            if(!records.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="color:#6b7280;">No submitted results found yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = records.map(record => {
+                const score = Number(record.rawScore) || 0;
+                const maximum = Number(record.maxScore) || 0;
+                const percentage = maximum ? Math.round((score / maximum) * 100) : 0;
+                const status = 'Released';
+                const date = record.timestamp ? new Date(Number(record.timestamp)).toLocaleDateString() : '—';
+                return `<tr>
+                    <td>${escapeHTML(record.exam || record.subject || 'Exam')}</td>
+                    <td>${escapeHTML(date)}</td>
+                    <td>${score} / ${maximum} (${percentage}%)</td>
+                    <td>${maximum ? computeGrade(percentage) : '—'}</td>
+                    <td>${status}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function refreshStudentResults() {
+            if(!currentUser || currentUser.role !== 'student' || !db) return;
+            const tbody = document.getElementById('student-results-body');
+            tbody.innerHTML = '<tr><td colspan="5" style="color:#6b7280;">Loading your results…</td></tr>';
+            try {
+                const snapshot = await db.collection('studentResults').where('studentUid', '==', currentUser.uid).get();
+                const records = snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.data().uid || doc.id }));
+                localStorage.setItem('secure_student_results', JSON.stringify(records));
+                renderStudentResults();
+            } catch(error) {
+                tbody.innerHTML = '<tr><td colspan="5" style="color:#b91c1c;">Could not load published results. Check the studentResults Firestore rules.</td></tr>';
+            }
+        }
+
+        async function initExamCameraAndMic() {
+            try {
+                examMediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                const liveProctorVideo = document.getElementById('live-proctor-video');
+                if(liveProctorVideo) liveProctorVideo.srcObject = examMediaStream;
+                return true;
+            } catch (err) {
+                console.log('Exam camera permission denied.');
+                return false;
+            }
+        }
+
+        async function startExamSession() {
+            const idx = document.getElementById('exam-select').value;
+            if(idx === "") { alert("Select exam."); return; }
+
+            activeExamData = window.fetchedExamsCache[idx];
+            try { await document.documentElement.requestFullscreen(); } catch(e) {}
+
+            const cameraReady = await initExamCameraAndMic();
+            if(!cameraReady) {
+                if(document.fullscreenElement) document.exitFullscreen().catch(() => {});
+                alert('Allow camera access to begin the proctored exam. The camera is used only during the exam.');
+                return;
+            }
+            neckTurnStrikes = 0;
+            document.getElementById('strike-counter-label').innerText = `Strikes: 0 / 3`;
+
+            document.getElementById('room-exam-title').innerText = `${activeExamData.subject} - ${activeExamData.batchTitle} (${activeExamData.assignedClass})`;
+            document.getElementById('room-student-name').innerText = `${currentUser.name} (${currentUser.identifier})`;
+            renderExamQuestions(activeExamData.questions);
+
+            document.getElementById('tab-student').classList.add('hidden');
+            document.getElementById('exam-room').classList.remove('hidden');
+
+            examTotalSecondsRemaining = (activeExamData.duration || 30) * 60;
+            isExamTimerPaused = false;
+            examSessionStartedAt = Date.now();
+            processedAdminCommandIds = new Set();
+            startTimer();
+            startStrictNeckTurnSensor();
+        }
+
+        // --- 3-Strike Neck-Turn Motion Detection Sensor & Auto-Submit ---
+        function startStrictNeckTurnSensor() {
+            if(neckTurnSensorInterval) clearInterval(neckTurnSensorInterval);
+
+            const video = document.getElementById('live-proctor-video');
+            const canvas = document.getElementById('motion-canvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = 160;
+            canvas.height = 120;
+
+            let previousFrameData = null;
+
+            neckTurnSensorInterval = setInterval(() => {
+                if(document.getElementById('exam-room').classList.contains('hidden') || !video || video.paused || video.ended) {
+                    return;
+                }
+
+                try {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    let currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    
+                    if(previousFrameData) {
+                        let diffCount = 0;
+                        for(let i = 0; i < currentFrame.data.length; i += 16) {
+                            let diff = Math.abs(currentFrame.data[i] - previousFrameData.data[i]);
+                            if(diff > 50) diffCount++;
+                        }
+
+                        // If head/neck turn motion detected
+                        if(diffCount > 1300) {
+                            neckTurnStrikes++;
+                            cheatingViolations++;
+                            document.getElementById('strike-counter-label').innerText = `Strikes: ${neckTurnStrikes} / 3`;
+
+                            if(neckTurnStrikes >= 3) {
+                                clearInterval(neckTurnSensorInterval);
+                                showAlertBanner("🚨 STRIKE 3: Max warnings reached! Exam auto-submitted & access revoked.");
+                                submitExam();
+                            } else {
+                                showAlertBanner(`⚠️ WARNING STRIKE ${neckTurnStrikes} / 3: Neck turn or looking away detected! Turning 3 times will auto-submit your exam.`);
+                            }
+                        }
+                    }
+                    previousFrameData = currentFrame;
+                } catch(e) {
+                    console.log("Sensor frame read error");
+                }
+            }, 1200);
+        }
+
+        function showAlertBanner(msg) {
+            const banner = document.createElement('div');
+            banner.className = 'alert-banner';
+            banner.innerText = msg;
+            document.body.appendChild(banner);
+            setTimeout(() => banner.remove(), 5000);
+        }
+
+        function startTimer() {
+            const display = document.getElementById('timer-display');
+            if(timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                applyAdminExamCommands();
+                if (isExamTimerPaused) return;
+
+                let mins = Math.floor(examTotalSecondsRemaining / 60);
+                let secs = examTotalSecondsRemaining % 60;
+                display.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                
+                if(examTotalSecondsRemaining <= 0) { 
+                    clearInterval(timerInterval); 
+                    submitExam(); 
+                }
+                examTotalSecondsRemaining--;
+            }, 1000);
+        }
+
+        // --- Master Admin Time Control Handlers ---
+        async function writeAdminExamCommand(command) {
+            let commands = [];
+            try { commands = JSON.parse(localStorage.getItem('secure_exam_admin_commands') || '[]'); } catch(e) {}
+            const savedCommand = { ...command, id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, createdAt: Date.now() };
+            commands.push(savedCommand);
+            localStorage.setItem('secure_exam_admin_commands', JSON.stringify(commands.slice(-200)));
+            if(!db || currentUser?.role !== 'admin') return;
+            const studentSnapshot = await db.collection('profiles').where('role', '==', 'student').get();
+            const students = studentSnapshot.docs.map(doc => doc.data()).filter(user => user.uid);
+            const target = String(command.target || '').trim().toLowerCase();
+            const recipients = command.type === 'pause-all' || command.type === 'resume-all'
+                ? students
+                : students.filter(user => String(user.identifier || '').trim().toLowerCase() === target || String(user.name || '').trim().toLowerCase() === target);
+            await Promise.all(recipients.map(user => db.collection('examCommands').doc(`${user.uid}_${savedCommand.id}`).set({
+                ...savedCommand,
+                targetUid: user.uid,
+                target: user.identifier
+            })));
+        }
+
+        function applyAdminExamCommands() {
+            if(!currentUser || currentUser.role !== 'student' || !examSessionStartedAt) return;
+            let commands = [];
+            try { commands = JSON.parse(localStorage.getItem('secure_exam_admin_commands') || '[]'); } catch(e) { return; }
+            commands.forEach(command => {
+                if(processedAdminCommandIds.has(command.id) || Number(command.createdAt) < examSessionStartedAt) return;
+                const target = String(command.target || '').trim().toLowerCase();
+                const matchesStudent = command.type === 'pause-all' || command.type === 'resume-all' ||
+                    target === String(currentUser.identifier || '').trim().toLowerCase() ||
+                    target === String(currentUser.name || '').trim().toLowerCase();
+                if(!matchesStudent) return;
+                processedAdminCommandIds.add(command.id);
+                if(command.type === 'add-time') {
+                    const seconds = Number(command.seconds);
+                    if(Number.isFinite(seconds) && seconds > 0 && seconds <= 3600) {
+                        examTotalSecondsRemaining += seconds;
+                        showAlertBanner(`⏱️ An administrator added ${Math.round(seconds / 60)} minute(s) to your exam.`);
+                    }
+                } else if(command.type === 'pause-all') {
+                    isExamTimerPaused = true;
+                    showAlertBanner('⏸️ Your exam timer has been paused by an administrator.');
+                } else if(command.type === 'resume-all') {
+                    isExamTimerPaused = false;
+                    showAlertBanner('▶️ Your exam timer has been resumed by an administrator.');
+                }
+            });
+        }
+
+        async function adminAddExtraTime() {
+            if(!currentUser || currentUser.role !== 'admin') return;
+            const target = document.getElementById('target-student-id').value.trim();
+            const extraMins = Number(document.getElementById('extra-time-mins').value);
+            if(!target) { alert('Enter the student ID or name to receive extra time.'); return; }
+            if(!Number.isFinite(extraMins) || extraMins < 1 || extraMins > 60) { alert('Enter a time between 1 and 60 minutes.'); return; }
+            try {
+                await writeAdminExamCommand({ type: 'add-time', target, seconds: extraMins * 60 });
+                alert(`⏱️ Added ${extraMins} minute(s) for ${target}. The command was sent through Firebase.`);
+            } catch(error) {
+                alert('Could not send the time command. Check Firebase access and the student ID.');
+            }
+        }
+
+        async function adminToggleGlobalPause() {
+            if(!currentUser || currentUser.role !== 'admin') return;
+            isExamTimerPaused = !isExamTimerPaused;
+            try {
+                await writeAdminExamCommand({ type: isExamTimerPaused ? 'pause-all' : 'resume-all' });
+            } catch(error) {
+                alert('Could not send the timer command to Firebase.');
+                return;
+            }
+            const btn = document.getElementById('global-pause-btn');
+            if(isExamTimerPaused) {
+                btn.innerText = "▶️ Resume Exam Timer for All Active Students";
+                btn.style.background = "#059669";
+                alert("⏸️ Exam timer successfully PAUSED by Master Admin.");
+            } else {
+                btn.innerText = "⏸️ Pause Exam Timer for All Active Students";
+                btn.style.background = "#d97706";
+                alert("▶️ Exam timer RESUMED.");
+            }
+        }
+
+        function renderExamQuestions(questions) {
+            const container = document.getElementById('exam-questions-container');
+            container.innerHTML = '';
+            currentExamQuestions = questions;
+
+            questions.forEach((q, qIdx) => {
+                let bodyHtml = '';
+                let imageHtml = q.image ? `<div style="margin-bottom: 12px;"><img src="${q.image}" style="max-width: 100%; max-height: 200px; border-radius: 6px;"></div>` : '';
+
+                if(q.type === 'theory') {
+                    bodyHtml = `${imageHtml}<textarea name="question_${qIdx}" rows="4" placeholder="Type detailed theory answer..." style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:6px;"></textarea>`;
+                } else {
+                    let optionsHtml = '';
+                    q.options.forEach((opt, oIdx) => {
+                        optionsHtml += `<label style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;"><input type="radio" name="question_${qIdx}" value="${oIdx}" style="width: 16px; height: 16px;"><span>${escapeHTML(opt)}</span></label>`;
+                    });
+                    bodyHtml = `${imageHtml}<div style="display: flex; flex-direction: column; gap: 8px;">${optionsHtml}</div>`;
+                }
+
+                let card = document.createElement('div');
+                card.className = 'card';
+                card.style.marginBottom = '0';
+                card.innerHTML = `<h3 style="margin: 0 0 12px 0; font-size: 16px;">Q${qIdx + 1} [${q.type.toUpperCase()}] : ${escapeHTML(q.text)}</h3>${bodyHtml}`;
+                container.appendChild(card);
+            });
+        }
+
+        function computeGrade(scorePct) {
+            if(scorePct >= 70) return 'A';
+            if(scorePct >= 60) return 'B';
+            if(scorePct >= 50) return 'C';
+            if(scorePct >= 40) return 'D';
+            return 'F';
+        }
+
+        async function generateAIMockExam() {
+            const isAdmin = currentUser?.role === 'admin';
+            if(!currentUser || (!isAdmin && currentUser.role !== 'subject-teacher') || typeof window.generateMockExamWithAI !== 'function') {
+                alert('Sign in with an administrator or subject-teacher account and finish Firebase AI Logic setup.');
+                return;
+            }
+            const statusId = isAdmin ? 'admin-ai-exam-status' : 'ai-exam-status';
+            const reviewId = isAdmin ? 'admin-ai-exam-review' : 'ai-exam-review';
+            const status = document.getElementById(statusId);
+            const review = document.getElementById(reviewId);
+            status.innerText = 'Creating 10 original exam-style questions…';
+            review.classList.add('hidden');
+            try {
+                const assignedClass = isAdmin ? document.getElementById('admin-ai-exam-class').value : currentUser.teacherClass;
+                const subject = isAdmin ? document.getElementById('admin-ai-exam-subject').value : currentUser.subject;
+                const batch = isAdmin ? document.getElementById('admin-ai-exam-batch').value : document.getElementById('builder-exam-batch').value;
+                const duration = parseInt(document.getElementById(isAdmin ? 'admin-ai-exam-duration' : 'builder-exam-duration').value, 10) || 30;
+                const questions = await window.generateMockExamWithAI({ assignedClass, subject });
+                aiMockDraft = { assignedClass, subject, batch, duration, questions };
+                aiMockDraft.reviewId = reviewId;
+                aiMockDraft.statusId = statusId;
+                review.innerHTML = `<h4 style="margin:0 0 10px;">Review draft (${aiMockDraft.questions.length} questions)</h4>` + aiMockDraft.questions.map((question, index) => {
+                    const choices = question.options.map((option, optionIndex) => `<li style="${optionIndex === question.correct ? 'font-weight:700;color:#15803d;' : ''}">${String.fromCharCode(65 + optionIndex)}. ${escapeHTML(option)}</li>`).join('');
+                    return `<article style="padding:12px;margin:10px 0;background:white;border:1px solid #e5e7eb;border-radius:8px;"><strong>Q${index + 1}. ${escapeHTML(question.text)}</strong><ol type="A" style="margin:8px 0;">${choices}</ol><p style="margin:0;color:#475569;font-size:12px;">Answer: ${String.fromCharCode(65 + question.correct)}. ${escapeHTML(question.explanation || '')}</p></article>`;
+                }).join('') + `<button type="button" onclick="publishAIMockExam()" class="btn" style="max-width:300px;background:#059669;">Approve and publish exam</button> <button type="button" onclick="discardAIMockExam()" class="btn btn-secondary" style="max-width:150px;">Discard draft</button>`;
+                review.classList.remove('hidden');
+                status.innerText = 'Review the questions and answers. This mock exam is automatically graded, but its answer key is visible to determined students.';
+            } catch(error) {
+                console.error('AI exam generation failed.', error);
+                status.innerText = error.message || 'Could not generate questions. Check Firebase AI Logic and App Check setup.';
+            }
+        }
+
+        async function publishAIMockExam() {
+            if(!aiMockDraft || !db || !currentUser?.uid) return;
+            const status = document.getElementById(aiMockDraft.statusId);
+            status.innerText = 'Publishing the reviewed exam…';
+            try {
+                const batchTitle = aiMockDraft.batch === 'Midterm' ? '3rd Term Continuous Assessment (Midterm)' : 'Final Exam';
+                const examPayload = {
+                    id: `ai_${Date.now()}_${currentUser.uid.slice(0, 8)}`,
+                    subject: aiMockDraft.subject,
+                    assignedClass: aiMockDraft.assignedClass,
+                    batch: aiMockDraft.batch,
+                    batchTitle,
+                    title: `${aiMockDraft.subject} ${batchTitle} Mock Exam`,
+                    duration: aiMockDraft.duration,
+                    questions: aiMockDraft.questions.map(question => ({ ...question, type: 'objective' })),
+                    createdBy: currentUser.identifier || currentUser.name || 'Teacher',
+                    aiGenerated: true,
+                    mockOnly: true
+                };
+                await savePublishedExam(examPayload);
+                status.innerText = 'The mock exam is published for your assigned class and subject.';
+                discardAIMockExam();
+                status.innerText = 'The mock exam is published for your assigned class and subject.';
+            } catch(error) {
+                console.error('AI exam publish failed.', error);
+                status.innerText = error.message || 'Could not publish the exam. Check your admin or teacher access and Firebase connection.';
+            }
+        }
+
+        function discardAIMockExam() {
+            const reviewId = aiMockDraft?.reviewId || 'ai-exam-review';
+            aiMockDraft = null;
+            const review = document.getElementById(reviewId);
+            review.innerHTML = '';
+            review.classList.add('hidden');
+        }
+
+        async function submitExam() {
+            if(timerInterval) clearInterval(timerInterval);
+            if(neckTurnSensorInterval) clearInterval(neckTurnSensorInterval);
+            stopAllCameraStreams();
+            if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+
+            const maxScoreVal = activeExamData.batch === 'Midterm' ? 30 : 70;
+            const perQuestionMax = currentExamQuestions.length ? maxScoreVal / currentExamQuestions.length : 0;
+            let answersDetail = [];
+
+            currentExamQuestions.forEach((q, qIdx) => {
+                if(q.type === 'theory') {
+                    const textEl = document.querySelector(`textarea[name="question_${qIdx}"]`);
+                    const studentTheoryAnswer = textEl ? textEl.value.trim() : 'No Answer';
+                    answersDetail.push({
+                        qText: q.text,
+                        type: 'theory',
+                        studentChoiceText: studentTheoryAnswer,
+                        correctChoiceText: 'Pending Subject Teacher Grading',
+                        isCorrect: null,
+                        theoryScore: 0,
+                        maxTheoryScore: perQuestionMax
+                    });
+                } else {
+                    const selectedEl = document.querySelector(`input[name="question_${qIdx}"]:checked`);
+                    const userChoice = selectedEl ? parseInt(selectedEl.value) : null;
+                    const isCorrect = userChoice === q.correct;
+
+                    answersDetail.push({
+                        qText: q.text,
+                        type: 'objective',
+                        studentChoiceText: userChoice !== null ? q.options[userChoice] : 'No Answer',
+                        correctChoiceText: q.options[q.correct],
+                        isCorrect: isCorrect,
+                        questionMaxScore: perQuestionMax
+                    });
+                }
+            });
+
+            const rawScore = Math.round(answersDetail.reduce((sum, answer) => {
+                if(answer.type === 'theory') return sum + (Number(answer.theoryScore) || 0);
+                return sum + (answer.isCorrect ? answer.questionMaxScore : 0);
+            }, 0) * 100) / 100;
+
+            const submissionRecord = {
+                name: currentUser.name,
+                studentClass: currentUser.studentClass || 'JSS 1',
+                id: currentUser.identifier,
+                examId: activeExamData.id,
+                subject: activeExamData.subject,
+                batch: activeExamData.batch,
+                exam: `${activeExamData.subject} - ${activeExamData.batchTitle}`,
+                rawScore: rawScore,
+                maxScore: maxScoreVal,
+                weightedScore: rawScore,
+                answersDetail: answersDetail,
+                violations: cheatingViolations,
+                timestamp: Date.now()
+            };
+
+            try {
+                await saveProctorLog(submissionRecord);
+            } catch(error) {
+                alert(error.message.includes('already been submitted') ? error.message : 'Your result could not be saved to Firebase. Check your connection and contact the administrator.');
+                return;
+            }
+
+            document.getElementById('exam-room').classList.add('hidden');
+            document.getElementById('score-screen').classList.remove('hidden');
+            document.getElementById('final-score-val').innerText = 'Result pending';
+            document.getElementById('final-percentage').innerText = 'Your class teacher will release your score in the My Results tab.';
+        }
+
+        // --- Master Admin Proctor Portal Functions (Separated) ---
+        function loadAdminProctorPortal() {
+            if(!currentUser || currentUser.role !== 'admin') {
+                alert("🚫 Unauthorized clearance.");
+                return;
+            }
+            loadAdminUnlockList();
+            loadAdminResetsList();
+        }
+
+        function loadAdminUnlockList() {
+            if(!currentUser || currentUser.role !== 'admin') return;
+            const tbody = document.getElementById('admin-unlock-tbody');
+            let users = JSON.parse(localStorage.getItem('secure_app_users') || '{}');
+            let studentKeys = Object.keys(users).filter(k => users[k].role === 'student');
+
+            if(studentKeys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #9ca3af; padding: 24px;">No registered student accounts found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            studentKeys.forEach(k => {
+                let s = users[k];
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: 600; color: #111827;">${s.name}</td>
+                        <td style="font-family: monospace;">${s.identifier}</td>
+                        <td><span class="badge badge-yellow">${s.studentClass || 'JSS 1'}</span></td>
+                        <td style="font-family: monospace; color: #4f46e5; font-weight: bold;">••••••••</td>
+                        <td><span class="badge ${s.faceBiometric ? 'badge-green' : 'badge-red'}">${s.faceBiometric ? 'Captured' : 'Missing'}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function loadAdminResetsList() {
+            if(!currentUser || currentUser.role !== 'admin') return;
+            const tbody = document.getElementById('admin-resets-tbody');
+            let logs = JSON.parse(localStorage.getItem('secure_proctor_logs') || '[]');
+
+            if(logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 24px;">No exam submissions recorded.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            logs.forEach((l, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: 600; color: #111827;">${l.name}</td>
+                        <td style="font-family: monospace;">${l.id}</td>
+                        <td><span class="badge badge-yellow">${l.studentClass || 'JSS 1'}</span></td>
+                        <td>${l.exam}</td>
+                        <td style="font-weight: bold; color: #4f46e5;">${l.rawScore} / ${l.maxScore}</td>
+                        <td>
+                            <button onclick="adminResetSubmissionAttempt(${index})" class="btn btn-secondary" style="background: #fef2f2; color: #b91c1c; border-color: #fecaca; padding: 6px 12px; font-size: 12px; width: auto;">🔓 Reset Attempt</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function adminResetSubmissionAttempt(index) {
+            if(!currentUser || currentUser.role !== 'admin') {
+                alert("🚫 Master Admin clearance required for submission resets.");
+                return;
+            }
+
+            let logs = JSON.parse(localStorage.getItem('secure_proctor_logs') || '[]');
+            let target = logs[index];
+            if(!target) return;
+            if(confirm(`Are you sure you want to reset and delete the submission record for ${target.name} (${target.exam})? This will allow them to retake the exam.`)) {
+                try {
+                    await db.collection('submissions').doc(target.submissionId).delete();
+                    await db.collection('proctorLogs').doc(target.submissionId).delete();
+                    await db.collection('studentAttempts').doc(target.submissionId).delete();
+                    await db.collection('studentResults').doc(target.submissionId).delete();
+                    alert('Submission record successfully reset. The student can now retake the exam.');
+                } catch(error) {
+                    alert('Could not reset this submission. Check the Firebase connection and permissions.');
+                }
+            }
+        }
+
+        // --- Subject Teacher Functions & Functional AI Fixer ---
+        function handleImageFileSelect(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempQuestionImageBase64 = e.target.result;
+                    document.getElementById('image-upload-status').innerText = `✅ Attached: ${file.name}`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function aiFixQuestionErrors() {
+            const textEl = document.getElementById('q-text');
+            let text = textEl.value.trim();
+            if(!text) { alert("Please enter question text to run AI correction."); return; }
+
+            let corrected = text.charAt(0).toUpperCase() + text.slice(1);
+            if(!corrected.endsWith('?')) corrected += '?';
+
+            textEl.value = corrected;
+            
+            const type = document.getElementById('q-type').value;
+            if(type === 'objective') {
+                for(let i=0; i<4; i++) {
+                    let optInput = document.getElementById(`q-opt${i}`);
+                    if(optInput && optInput.value) {
+                        let optVal = optInput.value.trim();
+                        optInput.value = optVal.charAt(0).toUpperCase() + optVal.slice(1);
+                    }
+                }
+            }
+            alert("Basic text cleanup applied. Connect an AI service to enable semantic question correction.");
+        }
+
+        function toggleQuestionTypeFields() {
+            const type = document.getElementById('q-type').value;
+            const objBox = document.getElementById('objective-options-box');
+            if(type === 'theory') objBox.classList.add('hidden');
+            else objBox.classList.remove('hidden');
+        }
+
+        function addQuestionToBuilder() {
+            const type = document.getElementById('q-type').value;
+            const text = document.getElementById('q-text').value.trim();
+            if(!text) { alert("Enter question text."); return; }
+
+            let questionObj = { type, text, image: tempQuestionImageBase64 };
+            if(type === 'objective') {
+                const opt0 = document.getElementById('q-opt0').value.trim();
+                const opt1 = document.getElementById('q-opt1').value.trim();
+                const opt2 = document.getElementById('q-opt2').value.trim();
+                const opt3 = document.getElementById('q-opt3').value.trim();
+                const correct = parseInt(document.getElementById('q-correct').value);
+                if(!opt0 || !opt1 || !opt2 || !opt3) { alert("Fill all 4 options."); return; }
+                questionObj.options = [opt0, opt1, opt2, opt3];
+                questionObj.correct = correct;
+                document.getElementById('q-opt0').value = '';
+                document.getElementById('q-opt1').value = '';
+                document.getElementById('q-opt2').value = '';
+                document.getElementById('q-opt3').value = '';
+            }
+
+            tempBuilderQuestions.push(questionObj);
+            document.getElementById('q-text').value = '';
+            document.getElementById('q-image-file').value = '';
+            document.getElementById('image-upload-status').innerText = '';
+            tempQuestionImageBase64 = "";
+            document.getElementById('builder-q-count').innerText = tempBuilderQuestions.length;
+            document.getElementById('builder-questions-preview').innerText = `${tempBuilderQuestions.length} question(s) queued.`;
+        }
+
+        async function pushExamToCloud() {
+            const batch = document.getElementById('builder-exam-batch').value;
+            const duration = parseInt(document.getElementById('builder-exam-duration').value) || 30;
+            if(tempBuilderQuestions.length === 0) { alert("Add questions first."); return; }
+
+            const batchTitle = batch === 'Midterm' ? '3rd Term Continuous Assessment (Midterm)' : 'Final Exam';
+            const examPayload = { 
+                id: 'exam_' + currentUser.subject + '_' + currentUser.teacherClass + '_' + batch + '_' + Date.now(), 
+                subject: currentUser.subject,
+                assignedClass: currentUser.teacherClass || 'JSS 1',
+                batch: batch,
+                batchTitle: batchTitle,
+                title: batchTitle, 
+                duration, 
+                questions: tempBuilderQuestions, 
+                createdBy: currentUser.identifier 
+            };
+
+            try {
+                await savePublishedExam(examPayload);
+                alert(`Exam for ${currentUser.subject} (${currentUser.teacherClass} - ${batchTitle}) published successfully to Firebase.`);
+                tempBuilderQuestions = [];
+                document.getElementById('builder-q-count').innerText = '0';
+                document.getElementById('builder-questions-preview').innerText = 'No questions added yet.';
+            } catch(error) {
+                alert('Could not publish this exam. Check that your Firebase profile is provisioned as a subject teacher.');
+            }
+        }
+
+        function loadSubjectGradingList() {
+            const container = document.getElementById('subject-grading-list');
+            let logs = JSON.parse(localStorage.getItem('secure_proctor_logs') || '[]');
+            let subjectLogs = logs.filter(l => l.subject === currentUser.subject && l.studentClass === (currentUser.teacherClass || 'JSS 1'));
+
+            if(subjectLogs.length === 0) {
+                container.innerHTML = `<p style="color: #9ca3af; text-align:center;">No submissions for ${currentUser.subject} in class ${currentUser.teacherClass || 'JSS 1'} yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            subjectLogs.forEach((l, index) => {
+                let answersHtml = '';
+                if(l.answersDetail && l.answersDetail.length > 0) {
+                    l.answersDetail.forEach((ans, aIdx) => {
+                        if(ans.type === 'theory') {
+                            answersHtml += `
+                                <div style="margin-top: 8px; padding: 12px; background: #fdf4ff; border: 1px solid #f5d0fe; border-radius: 6px; font-size: 13px;">
+                                    <p style="margin: 0 0 4px 0; font-weight: 600; color: #701a75;">Q${aIdx + 1} [THEORY]: ${ans.qText}</p>
+                                    <p style="margin: 0 0 6px 0; color: #374151;">Student Essay Answer: <span style="font-style: italic; font-weight: 500;">"${ans.studentChoiceText}"</span></p>
+                                    <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+                                        <label style="margin:0; font-size:12px;">Theory Score:</label>
+                                        <input type="number" id="theory_score_${index}_${aIdx}" value="${ans.theoryScore || 0}" style="width: 70px; padding: 4px; font-size: 13px;" placeholder="Marks">
+                                        <button onclick="updateTheoryScore(${index}, ${aIdx})" class="btn" style="padding: 4px 10px; font-size: 12px; width: auto; background: #9333ea;">Save Theory Mark</button>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            answersHtml += `
+                                <div style="margin-top: 8px; padding: 10px; background: ${ans.isCorrect ? '#ecfdf5' : '#fef2f2'}; border: 1px solid ${ans.isCorrect ? '#a7f3d0' : '#fecaca'}; border-radius: 6px; font-size: 13px;">
+                                    <p style="margin: 0 0 4px 0; font-weight: 600;">Q${aIdx + 1} [OBJECTIVE]: ${ans.qText}</p>
+                                    <p style="margin: 0 0 2px 0; color: #374151;">Student Answer: <span style="font-weight: 600; color: ${ans.isCorrect ? '#047857' : '#b91c1c'};">${ans.studentChoiceText}</span></p>
+                                    ${!ans.isCorrect ? `<p style="margin: 0; color: #b91c1c; font-weight: 600;">❌ Correct Answer: ${ans.correctChoiceText}</p>` : `<p style="margin: 0; color: #047857; font-weight: 600;">✅ Correct</p>`}
+                                </div>
+                            `;
+                        }
+                    });
+                } else {
+                    answersHtml = `<p style="font-size: 13px; color: #6b7280; font-style: italic;">Detailed question answers not recorded for this legacy submission.</p>`;
+                }
+
+                container.innerHTML += `
+                    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div>
+                                <h4 style="margin: 0 0 4px 0; font-size: 16px; color: #4f46e5;">${l.exam}</h4>
+                                <p style="margin: 0; font-size: 13px; color: #475569;">Student: <strong style="color: #111827;">${l.name} (${l.id})</strong> | Class: ${l.studentClass} | Total Score: ${l.rawScore} / ${l.maxScore}</p>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="number" id="edit_score_${index}" value="${l.rawScore}" style="width: 70px; padding: 6px; font-size: 13px;" placeholder="Score">
+                                <button onclick="updateSubjectGrade(${index})" class="btn" style="padding: 6px 12px; font-size: 13px; width: auto;">Update Total</button>
+                            </div>
+                        </div>
+                        <div style="border-top: 1px solid #e2e8f0; padding-top: 12px;">
+                            <h5 style="margin: 0 0 6px 0; font-size: 14px; color: #334151;">Question Breakdown & Theory Grading:</h5>
+                            ${answersHtml}
+                        </div>
+                    </div>
+                `;
+            });
+            window.currentSubjectLogsCache = subjectLogs;
+        }
+
+        async function updateTheoryScore(logIndex, ansIndex) {
+            let logs = JSON.parse(localStorage.getItem('secure_proctor_logs') || '[]');
+            let subjectLogs = window.currentSubjectLogsCache;
+            let targetLog = subjectLogs[logIndex];
+
+            if(!targetLog || !targetLog.answersDetail?.[ansIndex]) return;
+            const input = document.getElementById(`theory_score_${logIndex}_${ansIndex}`);
+            const scoreInput = Number(input.value);
+            const maxScore = Number(targetLog.answersDetail[ansIndex].maxTheoryScore);
+            if(!Number.isFinite(scoreInput) || scoreInput < 0 || !Number.isFinite(maxScore) || scoreInput > maxScore) {
+                alert(`Enter a theory mark from 0 to ${Number.isFinite(maxScore) ? maxScore.toFixed(2) : 0}.`);
+                return;
+            }
+            targetLog.answersDetail[ansIndex].theoryScore = scoreInput;
+            targetLog.answersDetail[ansIndex].graded = true;
+            targetLog.rawScore = Math.round(targetLog.answersDetail.reduce((sum, answer) => {
+                if(answer.type === 'theory') return sum + (Number(answer.theoryScore) || 0);
+                return sum + (answer.isCorrect ? (Number(answer.questionMaxScore) || 0) : 0);
+            }, 0) * 100) / 100;
+            targetLog.weightedScore = targetLog.rawScore;
+
+            let globalIndex = logs.findIndex(l => l.id === targetLog.id && l.examId === targetLog.examId && l.batch === targetLog.batch);
+            if(globalIndex !== -1) {
+                try {
+                    await db.collection('submissions').doc(targetLog.submissionId).update({ answersDetail: targetLog.answersDetail, rawScore: targetLog.rawScore, weightedScore: targetLog.weightedScore });
+                    alert('Theory grade saved to Firebase and shared with the class teacher.');
+                } catch(error) {
+                    alert('Could not save the theory grade. Check your Firebase permissions.');
+                }
+            }
+        }
+
+        async function updateSubjectGrade(index) {
+            let logs = JSON.parse(localStorage.getItem('secure_proctor_logs') || '[]');
+            let subjectLogs = window.currentSubjectLogsCache;
+            let targetLog = subjectLogs[index];
+
+            if(!targetLog) return;
+            const newScore = Number(document.getElementById(`edit_score_${index}`).value);
+            if(!Number.isFinite(newScore) || newScore < 0 || newScore > Number(targetLog.maxScore)) {
+                alert(`Enter a score from 0 to ${targetLog.maxScore}.`);
+                return;
+            }
+            targetLog.rawScore = newScore;
+            targetLog.weightedScore = newScore;
+
+            let globalIndex = logs.findIndex(l => l.id === targetLog.id && l.examId === targetLog.examId && l.batch === targetLog.batch);
+            if(globalIndex !== -1) {
+                try {
+                    await db.collection('submissions').doc(targetLog.submissionId).update({ rawScore: targetLog.rawScore, weightedScore: targetLog.weightedScore });
+                    alert('Grade updated in Firebase and shared with the class teacher.');
+                } catch(error) {
+                    alert('Could not update this grade. Check your Firebase permissions.');
+                }
+            }
+        }
+
+        function normalizeClassName(value) {
+            return String(value || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[character]);
+        }
+
+        function getCumulativeSubjects(records) {
+            const subjects = new Map();
+            (records || []).forEach(record => {
+                if(!record.subject || !['Midterm', 'Final'].includes(record.batch)) return;
+                if(!subjects.has(record.subject)) subjects.set(record.subject, {});
+                const scores = subjects.get(record.subject);
+                const previous = scores[record.batch];
+                if(!previous || (Number(record.timestamp) || 0) >= (Number(previous.timestamp) || 0)) {
+                    scores[record.batch] = record;
+                }
+            });
+
+            return [...subjects.entries()].map(([subject, scores]) => {
+                const midterm = scores.Midterm;
+                const finalExam = scores.Final;
+                const midtermScore = Number(midterm?.rawScore);
+                const midtermMax = Number(midterm?.maxScore);
+                const finalScore = Number(finalExam?.rawScore);
+                const finalMax = Number(finalExam?.maxScore);
+                const validMidterm = midterm && Number.isFinite(midtermScore) && Number.isFinite(midtermMax) && midtermMax > 0 && midtermScore >= 0 && midtermScore <= midtermMax;
+                const validFinal = finalExam && Number.isFinite(finalScore) && Number.isFinite(finalMax) && finalMax > 0 && finalScore >= 0 && finalScore <= finalMax;
+                const complete = Boolean(validMidterm && validFinal);
+                const cumulative = complete ? (midtermScore / midtermMax * 30) + (finalScore / finalMax * 70) : null;
+                return { subject, midterm: validMidterm ? { score: midtermScore, max: midtermMax } : null, finalExam: validFinal ? { score: finalScore, max: finalMax } : null, complete, cumulative };
+            });
+        }
+
+        function renderClassTeacherFolders() {
+            if(!currentUser || currentUser.role !== 'class-teacher') return;
+            const grid = document.getElementById('student-folders-grid');
+            const assignedClass = currentUser.studentClass || currentUser.teacherClass || 'JSS 1';
+            const normalizedClass = normalizeClassName(assignedClass);
+            document.getElementById('class-teacher-class-label').innerText = assignedClass;
+            document.getElementById('class-folder-title').innerText = `Student Folder Directory — Managed Class: ${assignedClass}`;
+
+            let users = {};
+            let logs = [];
+            try {
+                users = JSON.parse(localStorage.getItem('secure_app_users') || '{}');
+                logs = JSON.parse(localStorage.getItem('secure_proctor_logs') || '[]');
+            } catch(error) {
+                console.error('Unable to read class roster or submissions.', error);
+            }
+
+            const students = new Map();
+            Object.values(users).filter(user => user.role === 'student').forEach(user => {
+                const studentClass = user.studentClass || user.teacherClass || 'JSS 1';
+                if(normalizeClassName(studentClass) !== normalizedClass) return;
+                const key = user.identifier || user.id || user.name;
+                if(!key) return;
+                students.set(String(key), { name: user.name || 'Student', studentClass, id: user.identifier || user.id || '', records: [] });
+            });
+
+            logs.forEach(record => {
+                const key = String(record.id || record.name || '');
+                if(!key) return;
+                const existing = students.get(key);
+                const recordClass = record.studentClass || existing?.studentClass || 'JSS 1';
+                if(normalizeClassName(recordClass) !== normalizedClass) return;
+                if(!students.has(key)) students.set(key, { name: record.name || 'Student', studentClass: recordClass, id: record.id || '', records: [] });
+                students.get(key).records.push(record);
+            });
+
+            const ranked = [...students.entries()].map(([key, student]) => {
+                const completeSubjects = getCumulativeSubjects(student.records).filter(item => item.complete);
+                const average = completeSubjects.length ? completeSubjects.reduce((sum, item) => sum + item.cumulative, 0) / completeSubjects.length : null;
+                return { key, student, average };
+            }).sort((a, b) => (b.average ?? -1) - (a.average ?? -1) || a.student.name.localeCompare(b.student.name));
+
+            const rankedStudents = Object.create(null);
+            let rank = 0;
+            let previousAverage = null;
+            ranked.forEach((item, index) => {
+                if(item.average === null) item.student.rank = null;
+                else {
+                    if(previousAverage === null || Math.abs(item.average - previousAverage) > 0.0001) rank = index + 1;
+                    item.student.rank = rank;
+                    previousAverage = item.average;
+                }
+                item.student.average = item.average;
+                rankedStudents[item.key] = item.student;
+            });
+            window.classStudentsMap = rankedStudents;
+
+            grid.replaceChildren();
+            if(ranked.length === 0) {
+                grid.style.display = 'block';
+                const empty = document.createElement('div');
+                empty.style.cssText = 'text-align:center;padding:40px 20px;background:#f9fafb;border:1px dashed #d1d5db;border-radius:12px';
+                empty.innerHTML = '<div style="font-size:40px;margin-bottom:10px">📂</div><h4 style="margin:0 0 6px;font-size:16px;color:#374151">No students are assigned to this class yet</h4><p style="margin:0;font-size:13px;color:#6b7280">Registered students will appear here before they submit an exam.</p>';
+                grid.appendChild(empty);
+                return;
+            }
+
+            grid.style.display = 'grid';
+            ranked.forEach(item => {
+                const student = item.student;
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'folder-card';
+                card.style.cssText = 'text-align:left;width:100%;font:inherit;color:inherit;position:relative';
+                card.addEventListener('click', () => openStudentFolder(item.key));
+                const rankLabel = document.createElement('span');
+                rankLabel.style.cssText = 'position:absolute;top:12px;right:12px;background:#e0e7ff;color:#4338ca;padding:2px 8px;font-size:11px;font-weight:bold;border-radius:99px';
+                rankLabel.textContent = student.rank ? `Rank ${student.rank}` : 'No complete results';
+                const icon = document.createElement('div');
+                icon.style.cssText = 'font-size:32px;margin-bottom:8px';
+                icon.textContent = '📁';
+                const name = document.createElement('h4');
+                name.style.cssText = 'margin:0 0 4px;font-size:16px;color:#1e293b';
+                name.textContent = student.name;
+                const details = document.createElement('p');
+                details.style.cssText = 'margin:0;font-size:12px;color:#64748b';
+                details.textContent = `ID: ${student.id || '—'} | Class: ${student.studentClass}`;
+                card.append(rankLabel, icon, name, details);
+                grid.appendChild(card);
+            });
+        }
+
+        function renderClassResultReleaseList() {
+            if(!currentUser || currentUser.role !== 'class-teacher') return;
+            const tbody = document.getElementById('class-result-release-body');
+            if(!tbody) return;
+            const assignedClass = currentUser.studentClass || currentUser.teacherClass || 'JSS 1';
+            const logs = JSON.parse(localStorage.getItem('secure_proctor_logs') || '[]')
+                .filter(record => normalizeClassName(record.studentClass) === normalizeClassName(assignedClass))
+                .sort((first, second) => Number(second.timestamp) - Number(first.timestamp));
+            const published = JSON.parse(localStorage.getItem('secure_student_results') || '[]');
+            const publishedIds = new Set(published.map(result => result.submissionId || result.uid));
+
+            if(!logs.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="color:#6b7280;">No submitted results for your class yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(record => {
+                const isReleased = publishedIds.has(record.submissionId);
+                const hasPendingTheory = (record.answersDetail || []).some(answer => answer.type === 'theory' && !answer.graded);
+                const status = isReleased ? 'Released' : (hasPendingTheory ? 'Theory marking pending' : 'Ready to release');
+                const score = `${Number(record.rawScore) || 0} / ${Number(record.maxScore) || 0}`;
+                const action = hasPendingTheory
+                    ? '<button class="btn btn-secondary" style="width:auto;" disabled>Awaiting marking</button>'
+                    : `<button class="btn" style="width:auto;" data-release-submission="${escapeHTML(record.submissionId)}">${isReleased ? 'Update released result' : 'Release result'}</button>`;
+                return `<tr>
+                    <td>${escapeHTML(record.name || record.id || 'Student')} (${escapeHTML(record.id || '')})</td>
+                    <td>${escapeHTML(record.exam || record.subject || 'Exam')}</td>
+                    <td>${escapeHTML(score)}</td>
+                    <td>${status}</td>
+                    <td>${action}</td>
+                </tr>`;
+            }).join('');
+
+            tbody.querySelectorAll('[data-release-submission]').forEach(button => {
+                button.addEventListener('click', () => releaseStudentResult(button.dataset.releaseSubmission));
+            });
+        }
+
+        async function releaseStudentResult(submissionId) {
+            if(!db || !currentUser || currentUser.role !== 'class-teacher') return;
+            const record = JSON.parse(localStorage.getItem('secure_proctor_logs') || '[]')
+                .find(item => item.submissionId === submissionId);
+            if(!record || normalizeClassName(record.studentClass) !== normalizeClassName(currentUser.studentClass || currentUser.teacherClass)) {
+                alert('You can only release results for your assigned class.');
+                return;
+            }
+            if((record.answersDetail || []).some(answer => answer.type === 'theory' && !answer.graded)) {
+                alert('A subject teacher must finish marking theory answers before you release this result.');
+                return;
+            }
+            const percentage = Number(record.maxScore) > 0 ? Number(record.rawScore) / Number(record.maxScore) * 100 : 0;
+            const result = {
+                submissionId,
+                studentUid: record.studentUid,
+                studentClass: record.studentClass,
+                studentName: record.name,
+                studentIdentifier: record.id,
+                examId: record.examId,
+                exam: record.exam,
+                subject: record.subject,
+                batch: record.batch,
+                rawScore: Number(record.rawScore) || 0,
+                maxScore: Number(record.maxScore) || 0,
+                percentage: Math.round(percentage * 100) / 100,
+                releasedAt: Date.now(),
+                releasedByUid: currentUser.uid
+            };
+            try {
+                await db.collection('studentResults').doc(submissionId).set(result);
+                alert('Result released to the student’s My Results tab.');
+                renderClassResultReleaseList();
+            } catch(error) {
+                alert('Could not release this result. Check Firestore rules for class-teacher access to studentResults.');
+            }
+        }
+
+        function openStudentFolder(studentKey) {
+            if(!currentUser || currentUser.role !== 'class-teacher') return;
+            const student = window.classStudentsMap?.[studentKey];
+            if(!student) return;
+
+            activeExportStudentName = (student.name || 'Student').replace(/[^a-zA-Z0-9_-]/g, '_');
+            document.getElementById('class-folders-main').classList.add('hidden');
+            document.getElementById('student-folder-detail').classList.remove('hidden');
+
+            const subjectResults = getCumulativeSubjects(student.records);
+            const complete = subjectResults.filter(item => item.complete);
+            const average = complete.length ? complete.reduce((sum, item) => sum + item.cumulative, 0) / complete.length : null;
+            const rankSuffix = student.rank === 1 ? 'st' : (student.rank === 2 ? 'nd' : (student.rank === 3 ? 'rd' : 'th'));
+            const rowsHtml = subjectResults.length ? subjectResults.map(item => `
+                <tr>
+                    <td style="font-weight:600;">${escapeHTML(item.subject)}</td>
+                    <td>${item.midterm ? `${item.midterm.score} / ${item.midterm.max}` : 'Not recorded'}</td>
+                    <td>${item.finalExam ? `${item.finalExam.score} / ${item.finalExam.max}` : 'Not recorded'}</td>
+                    <td style="font-weight:bold;color:#4f46e5;">${item.complete ? `${item.cumulative.toFixed(1)} / 100 (${computeGrade(item.cumulative)})` : 'Pending both scores'}</td>
+                </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:#6b7280;padding:20px">No exam scores recorded yet.</td></tr>';
+
+            document.getElementById('student-folder-content').innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+                    <div>
+                        <h2 style="margin:0;font-size:22px;">📁 Report Card: ${escapeHTML(student.name || 'Student')}</h2>
+                        <p style="margin:4px 0 0;color:#6b7280;font-size:13px;">Student ID: ${escapeHTML(student.id || '—')} | Class: ${escapeHTML(student.studentClass || '')} | <strong style="color:#059669;">${student.rank ? `Class Position: ${student.rank}${rankSuffix}` : 'Position pending'}</strong></p>
+                    </div>
+                    <div style="background:#e0e7ff;color:#4338ca;padding:10px 16px;border-radius:8px;text-align:right;">
+                        <span style="font-size:12px;display:block;font-weight:600;">Overall Cumulative</span>
+                        <span style="font-size:18px;font-weight:800;">${average === null ? 'Pending' : `${average.toFixed(1)}% (${computeGrade(average)})`}</span>
+                    </div>
+                </div>
+                <p style="font-size:12px;color:#6b7280;">Overall score averages subjects with both assessments recorded. Midterm counts 30%; final exam counts 70%.</p>
+                <table>
+                    <thead><tr><th>Subject</th><th>Midterm (30%)</th><th>Final Exam (70%)</th><th>Cumulative (100)</th></tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>`;
+        }
+
+        // --- Export Student Folder to PDF ---
+        function exportStudentFolderToPDF() {
+            const element = document.getElementById('student-folder-content');
+            if(!currentUser || currentUser.role !== 'class-teacher' || !element || !activeExportStudentName) {
+                alert('Open a student report card before exporting.');
+                return;
+            }
+            if(typeof html2pdf !== 'function') {
+                alert('PDF export library did not load. Use your browser’s Print → Save as PDF option.');
+                window.print();
+                return;
+            }
+            const opt = {
+                margin:       10,
+                filename:     `ReportCard_${activeExportStudentName}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save().catch(() => {
+                alert('PDF export failed. Use your browser’s Print → Save as PDF option.');
+            });
+        }
+
+        function closeStudentFolder() {
+            document.getElementById('student-folder-detail').classList.add('hidden');
+            document.getElementById('class-folders-main').classList.remove('hidden');
+            renderClassTeacherFolders();
+        }
+
+        async function saveProctorLog(logData) {
+            await saveSubmissionRecord(logData);
+        }
+
+        function renderLogsTable() {
+            if(!currentUser || currentUser.role !== 'admin') {
+                alert("🚫 Master Admin clearance is required to view proctor logs.");
+                return;
+            }
+            const tbody = document.getElementById('logs-table-body');
+            let logs = JSON.parse(localStorage.getItem('secure_admin_proctor_logs') || '[]');
+            if(logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #9ca3af; padding: 24px;">No logs recorded.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            logs.forEach(l => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: 600; color: #111827;">${l.name}</td>
+                        <td><span class="badge badge-yellow">${l.studentClass || 'JSS 1'}</span></td>
+                        <td style="font-family: monospace;">${l.id}</td>
+                        <td>${l.exam}</td>
+                        <td style="font-weight: bold; color: #4f46e5;">${l.rawScore} / ${l.maxScore}</td>
+                        <td><span class="badge ${l.violations > 0 ? 'badge-red' : 'badge-green'}">${l.violations} Flag(s)</span></td>
+                    </tr>
+                `;
+            });
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator && location.protocol === 'https:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
